@@ -1,7 +1,7 @@
 [package]
 name = "pixmux"
 version = "0.1.0"
-description = "An example generated using the simple template"
+description = "An interactive TUI for exploring CSV-backed image datasets."
 authors = ["Akshay Kumar <132216831+bmblb3@users.noreply.github.com>"]
 license = "MIT"
 edition = "2024"
