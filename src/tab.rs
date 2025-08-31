@@ -1,3 +1,5 @@
+use ratatui::widgets::{Block, Paragraph, Widget};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tab {
     Data,
@@ -38,10 +40,32 @@ impl Tab {
         }
     }
 
-    pub fn content(&self) -> &'static str {
+    pub fn create_widget(&self) -> TabWidget {
         match self {
-            Tab::Data => "Data content here",
-            Tab::Image => "Image content here",
+            Tab::Data => {
+                TabWidget::Data(Paragraph::new("Data content here").block(Block::bordered()))
+            }
+            Tab::Image => {
+                TabWidget::Image(Paragraph::new("Image content here").block(Block::bordered()))
+            }
+        }
+    }
+
+    pub fn render(&self, frame: &mut ratatui::Frame, area: ratatui::layout::Rect) {
+        frame.render_widget(self.create_widget(), area);
+    }
+}
+
+pub enum TabWidget {
+    Data(Paragraph<'static>),
+    Image(Paragraph<'static>),
+}
+
+impl Widget for TabWidget {
+    fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+        match self {
+            TabWidget::Data(widget) => widget.render(area, buf),
+            TabWidget::Image(widget) => widget.render(area, buf),
         }
     }
 }

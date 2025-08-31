@@ -4,7 +4,7 @@ use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
-    widgets::{Block, Paragraph, Tabs},
+    widgets::{Block, Tabs},
 };
 
 use crate::tab::Tab;
@@ -68,10 +68,7 @@ impl App {
 
         frame.render_widget(tabs, chunks[0]);
 
-        let paragraph = Paragraph::new(self.current_tab.content())
-            .block(Block::bordered().title(self.current_tab.title()));
-
-        frame.render_widget(paragraph, chunks[1]);
+        self.current_tab.render(frame, chunks[1]);
     }
 
     fn handle_crossterm_events(&mut self) -> Result<()> {
