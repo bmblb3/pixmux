@@ -3,8 +3,6 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifier
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    widgets::{Block, Tabs},
 };
 
 use crate::tab::Tab;
@@ -61,13 +59,7 @@ impl App {
             .constraints([Constraint::Length(3), Constraint::Min(0)])
             .split(frame.area());
 
-        let tabs = Tabs::new(Tab::titles())
-            .block(Block::bordered())
-            .select(self.current_tab.to_index())
-            .highlight_style(Style::default().fg(Color::Yellow));
-
-        frame.render_widget(tabs, chunks[0]);
-
+        self.current_tab.render_navbar(frame, chunks[0]);
         self.current_tab.render(frame, chunks[1]);
     }
 

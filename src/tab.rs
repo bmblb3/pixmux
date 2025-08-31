@@ -1,4 +1,7 @@
-use ratatui::widgets::{Block, Paragraph, Widget};
+use ratatui::{
+    style::{Color, Style},
+    widgets::{Block, Paragraph, Tabs, Widget},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tab {
@@ -38,6 +41,14 @@ impl Tab {
             Tab::Data => 0,
             Tab::Image => 1,
         }
+    }
+
+    pub fn render_navbar(&self, frame: &mut ratatui::Frame, area: ratatui::layout::Rect) {
+        let tabs = Tabs::new(Self::titles())
+            .block(Block::bordered())
+            .select(self.to_index())
+            .highlight_style(Style::default().fg(Color::Yellow));
+        frame.render_widget(tabs, area);
     }
 
     pub fn create_widget(&self) -> TabWidget {
