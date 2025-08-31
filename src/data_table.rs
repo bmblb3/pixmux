@@ -1,4 +1,4 @@
-use ratatui::widgets::{Block, Table};
+use ratatui::widgets::Table;
 
 use crate::App;
 
@@ -24,13 +24,11 @@ impl DataTable {
             })
             .collect::<Vec<_>>();
 
-        Table::new(rows, app.headers.iter().map(|_| 20).collect::<Vec<_>>())
-            .header(Row::new(
-                app.headers
-                    .iter()
-                    .map(|h| Cell::from(h.clone()))
-                    .collect::<Vec<_>>(),
-            ))
-            .block(Block::bordered())
+        Table::new(rows, app.headers.iter().map(|_| 20).collect::<Vec<_>>()).header(Row::new(
+            app.headers
+                .iter()
+                .map(|h| Cell::from(h.clone()))
+                .collect::<Vec<_>>(),
+        ))
     }
 }
