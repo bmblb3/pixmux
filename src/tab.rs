@@ -1,7 +1,11 @@
 use ratatui::{
+    Frame,
+    layout::Rect,
     style::{Color, Style},
     widgets::{Block, Paragraph, Table, Tabs, Widget},
 };
+
+use crate::App;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Tab {
@@ -52,15 +56,31 @@ impl Tab {
         frame.render_widget(tabs, area);
     }
 
-    pub fn create_widget(&self) -> TabWidget {
+    pub fn create_widget(&self, app: &App) -> TabWidget {
         match self {
             Tab::Data => {
                 use ratatui::widgets::{Cell, Row, Table};
-                let rows = vec![
-                    Row::new(vec![Cell::from("Header1"), Cell::from("Header2")]),
-                    Row::new(vec![Cell::from("Value1"), Cell::from("Value2")]),
-                ];
-                TabWidget::DataTable(Table::new(rows, [20, 20]).block(Block::bordered()))
+                let rows = app
+                    .table
+                    .iter()
+                    .map(|row| {
+                        Row::new(
+                            row.iter()
+                                .map(|cell| Cell::from(cell.clone()))
+                                .collect::<Vec<_>>(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                TabWidget::DataTable(
+                    Table::new(rows, app.headers.iter().map(|_| 20).collect::<Vec<_>>())
+                        .header(Row::new(
+                            app.headers
+                                .iter()
+                                .map(|h| Cell::from(h.clone()))
+                                .collect::<Vec<_>>(),
+                        ))
+                        .block(Block::bordered()),
+                )
             }
             Tab::Image => {
                 TabWidget::Image(Paragraph::new("Image content here").block(Block::bordered()))
@@ -68,8 +88,8 @@ impl Tab {
         }
     }
 
-    pub fn render(&self, frame: &mut ratatui::Frame, area: ratatui::layout::Rect) {
-        frame.render_widget(self.create_widget(), area);
+    pub fn render(&self, frame: &mut Frame, area: Rect, app: &App) {
+        frame.render_widget(self.create_widget(app), area);
     }
 }
 

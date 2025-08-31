@@ -11,8 +11,8 @@ use crate::tab::Tab;
 pub struct App {
     running: bool,
     current_tab: Tab,
-    headers: Vec<String>,
-    table: Vec<Vec<String>>,
+    pub headers: Vec<String>,
+    pub table: Vec<Vec<String>>,
 }
 
 impl App {
@@ -64,7 +64,7 @@ impl App {
             .split(frame.area());
 
         self.current_tab.render_navbar(frame, chunks[0]);
-        self.current_tab.render(frame, chunks[1]);
+        self.current_tab.render(frame, chunks[1], self);
     }
 
     fn handle_crossterm_events(&mut self) -> Result<()> {
