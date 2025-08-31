@@ -1,3 +1,5 @@
+use std::{fs::File, io::Read};
+
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{
@@ -17,20 +19,35 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> Self {
-        Self {
+    pub fn new(csv_path: &str) -> Result<Self> {
+        let (headers, table) = Self::read_csv(csv_path)?;
+        Ok(Self {
             running: false,
             current_tab: Tab::Data,
-            headers: vec!["Col1".into(), "Col2".into(), "Col3".into(), "Col4".into()],
-            table: vec![
-                vec!["R1C1".into(), "R1C2".into(), "R1C3".into(), "R1C4".into()],
-                vec!["R2C1".into(), "R2C2".into(), "R2C3".into(), "R2C4".into()],
-                vec!["R3C1".into(), "R3C2".into(), "R3C3".into(), "R3C4".into()],
-                vec!["R4C1".into(), "R4C2".into(), "R4C3".into(), "R4C4".into()],
-                vec!["R5C1".into(), "R5C2".into(), "R5C3".into(), "R5C4".into()],
-            ],
+            headers,
+            table,
             current_row_index: 0,
-        }
+        })
+    }
+
+    fn read_csv(path: &str) -> Result<(Vec<String>, Vec<Vec<String>>)> {
+        let mut file = File::open(path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        let mut lines = contents.lines();
+        let headers = lines
+            .next()
+            .ok_or_else(|| color_eyre::eyre::eyre!("Empty CSV file"))?
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect();
+
+        let table = lines
+            .map(|line| line.split(',').map(|s| s.trim().to_string()).collect())
+            .collect();
+
+        Ok((headers, table))
     }
 
     pub fn next_tab(&mut self) {
