@@ -13,6 +13,7 @@ pub struct App {
     current_tab: Tab,
     pub headers: Vec<String>,
     pub table: Vec<Vec<String>>,
+    pub current_row_index: u16,
 }
 
 impl App {
@@ -28,6 +29,7 @@ impl App {
                 vec!["R4C1".into(), "R4C2".into(), "R4C3".into(), "R4C4".into()],
                 vec!["R5C1".into(), "R5C2".into(), "R5C3".into(), "R5C4".into()],
             ],
+            current_row_index: 0,
         }
     }
 
