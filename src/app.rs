@@ -72,12 +72,6 @@ impl App {
             .block(Block::bordered().title(self.current_tab.title()));
 
         frame.render_widget(paragraph, chunks[1]);
-        let content = self.current_tab.content();
-
-        let paragraph =
-            Paragraph::new(content).block(Block::bordered().title(self.current_tab.title()));
-
-        frame.render_widget(paragraph, chunks[1]);
     }
 
     fn handle_crossterm_events(&mut self) -> Result<()> {
