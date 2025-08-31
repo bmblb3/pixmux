@@ -94,13 +94,10 @@ impl App {
     }
 
     fn handle_updown(&mut self, code: KeyCode) {
-        match self.current_tab {
-            Tab::Data => match code {
-                KeyCode::Down => self.next_row(),
-                KeyCode::Up => self.prev_row(),
-                _ => {}
-            },
-            Tab::Image => {}
+        match code {
+            KeyCode::Down => self.next_row(),
+            KeyCode::Up => self.prev_row(),
+            _ => {}
         }
     }
 
