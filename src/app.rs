@@ -7,24 +7,28 @@ use ratatui::{
 
 use crate::tab::Tab;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct App {
     running: bool,
     current_tab: Tab,
-}
-
-impl Default for App {
-    fn default() -> Self {
-        Self {
-            running: false,
-            current_tab: Tab::Data,
-        }
-    }
+    headers: Vec<String>,
+    table: Vec<Vec<String>>,
 }
 
 impl App {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            running: false,
+            current_tab: Tab::Data,
+            headers: vec!["Col1".into(), "Col2".into(), "Col3".into(), "Col4".into()],
+            table: vec![
+                vec!["R1C1".into(), "R1C2".into(), "R1C3".into(), "R1C4".into()],
+                vec!["R2C1".into(), "R2C2".into(), "R2C3".into(), "R2C4".into()],
+                vec!["R3C1".into(), "R3C2".into(), "R3C3".into(), "R3C4".into()],
+                vec!["R4C1".into(), "R4C2".into(), "R4C3".into(), "R4C4".into()],
+                vec!["R5C1".into(), "R5C2".into(), "R5C3".into(), "R5C4".into()],
+            ],
+        }
     }
 
     #[cfg(test)]

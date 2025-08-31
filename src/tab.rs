@@ -3,8 +3,9 @@ use ratatui::{
     widgets::{Block, Paragraph, Table, Tabs, Widget},
 };
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Tab {
+    #[default]
     Data,
     Image,
 }
