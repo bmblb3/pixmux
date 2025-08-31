@@ -33,21 +33,24 @@ impl App {
         }
     }
 
-    #[cfg(test)]
-    pub fn current_tab(&self) -> Tab {
-        self.current_tab
-    }
-
-    pub fn set_tab(&mut self, tab: Tab) {
-        self.current_tab = tab;
-    }
-
     pub fn next_tab(&mut self) {
-        self.set_tab(self.current_tab.next());
+        self.current_tab = self.current_tab.next();
     }
 
     pub fn previous_tab(&mut self) {
-        self.set_tab(self.current_tab.previous());
+        self.current_tab = self.current_tab.previous();
+    }
+
+    pub fn next_row(&mut self) {
+        if self.current_row_index < (self.table.len() as u16 - 1) {
+            self.current_row_index += 1;
+        }
+    }
+
+    pub fn prev_row(&mut self) {
+        if self.current_row_index > 0 {
+            self.current_row_index -= 1;
+        }
     }
 
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
@@ -85,7 +88,19 @@ impl App {
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             (_, KeyCode::Tab) => self.next_tab(),
             (KeyModifiers::SHIFT, KeyCode::BackTab) => self.previous_tab(),
+            (_, KeyCode::Up) | (_, KeyCode::Down) => self.handle_updown(key.code),
             _ => {}
+        }
+    }
+
+    fn handle_updown(&mut self, code: KeyCode) {
+        match self.current_tab {
+            Tab::Data => match code {
+                KeyCode::Down => self.next_row(),
+                KeyCode::Up => self.prev_row(),
+                _ => {}
+            },
+            Tab::Image => {}
         }
     }
 
