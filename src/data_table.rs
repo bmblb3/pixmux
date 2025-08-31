@@ -36,6 +36,7 @@ impl DataTable {
                         .collect::<Vec<_>>(),
                 )
                 .bold()
+                .gray()
                 .underlined(),
             )
             .block(Block::default().borders(Borders::ALL))
