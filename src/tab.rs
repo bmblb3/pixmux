@@ -2,7 +2,7 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Style},
-    widgets::{Block, Paragraph, Table, Tabs, Widget},
+    widgets::{Block, Paragraph, Tabs},
 };
 
 use crate::App;
@@ -57,34 +57,18 @@ impl Tab {
         frame.render_widget(tabs, area);
     }
 
-    pub fn create_widget(&self, app: &App) -> TabWidget {
+    pub fn render(&self, frame: &mut Frame, area: Rect, app: &App) {
         match self {
             Tab::Data => {
                 let data_table = DataTable::new();
-                TabWidget::DataTable(data_table.create_widget(app))
+                frame.render_widget(data_table.create_widget(app), area);
             }
-
             Tab::Image => {
-                TabWidget::Image(Paragraph::new("Image content here").block(Block::bordered()))
+                frame.render_widget(
+                    Paragraph::new("Image content here").block(Block::bordered()),
+                    area,
+                );
             }
-        }
-    }
-
-    pub fn render(&self, frame: &mut Frame, area: Rect, app: &App) {
-        frame.render_widget(self.create_widget(app), area);
-    }
-}
-
-pub enum TabWidget {
-    DataTable(Table<'static>),
-    Image(Paragraph<'static>),
-}
-
-impl Widget for TabWidget {
-    fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
-        match self {
-            TabWidget::DataTable(widget) => widget.render(area, buf),
-            TabWidget::Image(widget) => widget.render(area, buf),
         }
     }
 }

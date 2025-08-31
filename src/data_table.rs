@@ -1,4 +1,4 @@
-use ratatui::widgets::Table;
+use ratatui::{layout::Constraint, style::Stylize, widgets::Table};
 
 use crate::App;
 
@@ -11,7 +11,10 @@ impl DataTable {
     }
 
     pub fn create_widget(&self, app: &App) -> Table<'static> {
-        use ratatui::widgets::{Cell, Row, Table};
+        let collen = app.headers.len();
+        let constraints = vec![Constraint::Length(20); collen];
+
+        use ratatui::widgets::{Block, Borders, Cell, Row, Table};
         let rows = app
             .table
             .iter()
@@ -24,11 +27,17 @@ impl DataTable {
             })
             .collect::<Vec<_>>();
 
-        Table::new(rows, app.headers.iter().map(|_| 20).collect::<Vec<_>>()).header(Row::new(
-            app.headers
-                .iter()
-                .map(|h| Cell::from(h.clone()))
-                .collect::<Vec<_>>(),
-        ))
+        Table::new(rows, constraints)
+            .header(
+                Row::new(
+                    app.headers
+                        .iter()
+                        .map(|h| Cell::from(h.clone()))
+                        .collect::<Vec<_>>(),
+                )
+                .bold()
+                .underlined(),
+            )
+            .block(Block::default().borders(Borders::ALL))
     }
 }
