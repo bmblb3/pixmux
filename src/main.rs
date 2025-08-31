@@ -1,6 +1,7 @@
 use color_eyre::Result;
 
 mod app;
+mod data_table;
 mod tab;
 
 use app::App;
