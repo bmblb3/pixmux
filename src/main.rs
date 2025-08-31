@@ -70,11 +70,11 @@ impl App {
     }
 
     pub fn next_tab(&mut self) {
-        self.current_tab = self.current_tab.next();
+        self.set_tab(self.current_tab.next());
     }
 
     pub fn previous_tab(&mut self) {
-        self.current_tab = self.current_tab.previous();
+        self.set_tab(self.current_tab.previous());
     }
 
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
