@@ -1,6 +1,6 @@
 use ratatui::{
     style::{Color, Style},
-    widgets::{Block, Paragraph, Tabs, Widget},
+    widgets::{Block, Paragraph, Table, Tabs, Widget},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -54,7 +54,12 @@ impl Tab {
     pub fn create_widget(&self) -> TabWidget {
         match self {
             Tab::Data => {
-                TabWidget::Data(Paragraph::new("Data content here").block(Block::bordered()))
+                use ratatui::widgets::{Cell, Row, Table};
+                let rows = vec![
+                    Row::new(vec![Cell::from("Header1"), Cell::from("Header2")]),
+                    Row::new(vec![Cell::from("Value1"), Cell::from("Value2")]),
+                ];
+                TabWidget::DataTable(Table::new(rows, [20, 20]).block(Block::bordered()))
             }
             Tab::Image => {
                 TabWidget::Image(Paragraph::new("Image content here").block(Block::bordered()))
@@ -68,14 +73,14 @@ impl Tab {
 }
 
 pub enum TabWidget {
-    Data(Paragraph<'static>),
+    DataTable(Table<'static>),
     Image(Paragraph<'static>),
 }
 
 impl Widget for TabWidget {
     fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
         match self {
-            TabWidget::Data(widget) => widget.render(area, buf),
+            TabWidget::DataTable(widget) => widget.render(area, buf),
             TabWidget::Image(widget) => widget.render(area, buf),
         }
     }
