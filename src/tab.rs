@@ -56,8 +56,7 @@ impl Tab {
     pub fn render(&self, frame: &mut Frame, area: Rect, app: &App) {
         match self {
             Tab::Data => {
-                let data_table = DataTable::new();
-                frame.render_widget(data_table.create_widget(app), area);
+                frame.render_widget(DataTable::create_widget(app), area);
             }
             Tab::Image => {
                 frame.render_widget(

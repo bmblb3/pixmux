@@ -6,11 +6,7 @@ use crate::App;
 pub struct DataTable;
 
 impl DataTable {
-    pub fn new() -> Self {
-        Self
-    }
-
-    pub fn create_widget(&self, app: &App) -> Table<'static> {
+    pub fn create_widget(app: &App) -> Table<'static> {
         let collen = app.headers.len();
         let constraints = vec![Constraint::Length(20); collen];
 
