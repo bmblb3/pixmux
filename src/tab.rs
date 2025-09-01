@@ -2,11 +2,11 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Style},
-    widgets::{Block, Paragraph, Tabs},
+    widgets::{Block, Tabs},
 };
 
-use crate::App;
 use crate::data_table::DataTable;
+use crate::{App, image_lyt::ImageLayout};
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Tab {
@@ -59,10 +59,7 @@ impl Tab {
                 frame.render_widget(DataTable::create_widget(app), area);
             }
             Tab::Image => {
-                frame.render_widget(
-                    Paragraph::new("Image content here").block(Block::bordered()),
-                    area,
-                );
+                frame.render_widget(ImageLayout::create_widget(), area);
             }
         }
     }

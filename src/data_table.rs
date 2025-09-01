@@ -1,4 +1,8 @@
-use ratatui::{layout::Constraint, style::Stylize, widgets::Table};
+use ratatui::{
+    layout::Constraint,
+    style::Stylize,
+    widgets::{Block, Borders, Cell, Row, Table},
+};
 
 use crate::App;
 
@@ -10,7 +14,6 @@ impl DataTable {
         let collen = app.headers.len();
         let constraints = vec![Constraint::Length(20); collen];
 
-        use ratatui::widgets::{Block, Borders, Cell, Row, Table};
         let rows = app
             .table
             .iter()
