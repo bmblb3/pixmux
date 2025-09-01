@@ -16,13 +16,6 @@ pub enum Tab {
 }
 
 impl Tab {
-    pub fn title(&self) -> &'static str {
-        match self {
-            Tab::Data => "Data",
-            Tab::Image => "Image",
-        }
-    }
-
     pub fn next(&self) -> Self {
         match self {
             Tab::Data => Tab::Image,
@@ -34,12 +27,15 @@ impl Tab {
         self.next()
     }
 
-    pub fn all() -> Vec<Self> {
-        vec![Tab::Data, Tab::Image]
-    }
-
     pub fn titles() -> Vec<&'static str> {
-        Self::all().iter().map(|tab| tab.title()).collect()
+        let order = [Tab::Data, Tab::Image];
+        order
+            .iter()
+            .map(|tab| match tab {
+                Tab::Data => "Data",
+                Tab::Image => "Image",
+            })
+            .collect()
     }
 
     pub fn to_index(self) -> usize {
