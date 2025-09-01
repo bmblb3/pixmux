@@ -59,7 +59,7 @@ impl Tab {
                 frame.render_widget(DataTable::create_widget(app), area);
             }
             Tab::Image => {
-                frame.render_widget(ImageLayout::create_widget(), area);
+                ImageLayout::render_layout(frame, area);
             }
         }
     }
