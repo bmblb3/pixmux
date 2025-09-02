@@ -4,6 +4,7 @@ use ratatui::{
     style::Color,
     widgets::{Block, BorderType},
 };
+use ratatui_image::{StatefulImage, picker::Picker};
 
 use crate::app::App;
 
@@ -39,9 +40,22 @@ impl ImageLayout {
     ) {
         match pane {
             Pane::Leaf => {
-                let block = Block::bordered().border_type(BorderType::QuadrantOutside);
+                let imagefile = "/home/akucwh/techsim_root/nsa/fluidcfd/01_Ongoing/01_ATS/Increment/PI2526/VES-12345__DORA_Iteration_Work/930__cup_wing_doe/concept_1.2/doe.46/MB3/T_evap.png";
+                let picker = Picker::from_query_stdio().unwrap();
+                let image_source = image::ImageReader::open(imagefile)
+                    .unwrap()
+                    .decode()
+                    .unwrap();
+                let mut image = picker.new_resize_protocol(image_source);
+
+                let block = Block::bordered().border_type(BorderType::QuadrantInside);
                 if pane_enum == current_pane_id {
-                    frame.render_widget(block.style(Color::Yellow), area);
+                    frame.render_widget(block.clone().style(Color::Yellow), area);
+                    frame.render_stateful_widget(
+                        StatefulImage::default(),
+                        block.inner(area),
+                        &mut image,
+                    );
                 } else {
                     frame.render_widget(block, area);
                 }
@@ -59,6 +73,7 @@ impl ImageLayout {
                     Constraint::Percentage((100 - pct) as u16),
                 ];
                 let chunks = Layout::default()
+                    .spacing(-1)
                     .direction(*direction)
                     .constraints(constraints)
                     .split(area);
