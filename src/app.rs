@@ -227,12 +227,7 @@ impl App {
                     *candidate_imgpane_id += 1;
                     return false;
                 }
-                *pane = Pane::Split {
-                    direction: *split_direction,
-                    pct: 50,
-                    first: Box::new(Pane::Leaf),
-                    second: Box::new(Pane::Leaf),
-                };
+                *pane = Pane::split(*split_direction);
                 true
             }
         }
