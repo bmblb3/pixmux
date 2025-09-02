@@ -28,7 +28,7 @@ pub enum Pane {
 pub struct ImageLayout;
 
 impl ImageLayout {
-    fn render_pane(frame: &mut Frame, area: Rect, pane: &Pane) {
+    fn render_imgpane(frame: &mut Frame, area: Rect, pane: &Pane) {
         match pane {
             Pane::Leaf => {
                 frame.render_widget(Paragraph::new("Image Pane").block(Block::bordered()), area);
@@ -43,13 +43,13 @@ impl ImageLayout {
                     .direction(*direction)
                     .constraints(constraints)
                     .split(area);
-                Self::render_pane(frame, chunks[0], first);
-                Self::render_pane(frame, chunks[1], second);
+                Self::render_imgpane(frame, chunks[0], first);
+                Self::render_imgpane(frame, chunks[1], second);
             }
         }
     }
 
     pub fn render(frame: &mut Frame, area: Rect, app: &App) {
-        Self::render_pane(frame, area, &app.root_image_pane);
+        Self::render_imgpane(frame, area, &app.root_imgpane);
     }
 }
