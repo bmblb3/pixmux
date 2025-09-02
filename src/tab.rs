@@ -6,7 +6,7 @@ use ratatui::{
 };
 
 use crate::data_table::DataTable;
-use crate::{App, image_lyt::ImageLayout};
+use crate::{App, image_layout::ImageLayout};
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Tab {
@@ -59,7 +59,7 @@ impl Tab {
                 frame.render_widget(DataTable::create_widget(app), area);
             }
             Tab::Image => {
-                ImageLayout::render_layout(frame, area);
+                ImageLayout::render(frame, area, app);
             }
         }
     }
