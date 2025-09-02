@@ -88,6 +88,33 @@ impl App {
         Ok((headers, table, dir_paths))
     }
 
+    pub fn collect_image_basenames(&self) -> std::collections::BTreeSet<String> {
+        let mut basenames = std::collections::BTreeSet::new();
+        let image_extensions = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp"];
+
+        for dir_path in &self.imgdir_paths {
+            if let Ok(entries) = std::fs::read_dir(dir_path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Some(ext) = path.extension() {
+                            if let Some(ext_str) = ext.to_str() {
+                                if image_extensions.contains(&ext_str.to_lowercase().as_str()) {
+                                    if let Some(basename) = path.file_stem() {
+                                        if let Some(basename_str) = basename.to_str() {
+                                            basenames.insert(basename_str.to_string());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        basenames
+    }
+
     pub fn next_tab(&mut self) {
         self.current_tab = self.current_tab.next();
     }
