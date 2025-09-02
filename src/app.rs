@@ -54,10 +54,6 @@ impl App {
         self.current_tab = self.current_tab.next();
     }
 
-    pub fn previous_tab(&mut self) {
-        self.current_tab = self.current_tab.previous();
-    }
-
     pub fn next_row(&mut self) {
         if self.current_row_index < (self.table_rows.len() as u16 - 1) {
             self.current_row_index += 1;
@@ -104,7 +100,6 @@ impl App {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             (_, KeyCode::Tab) => self.next_tab(),
-            (KeyModifiers::SHIFT, KeyCode::BackTab) => self.previous_tab(),
             (_, KeyCode::Up) | (_, KeyCode::Down) => self.handle_updown(key.code),
             _ => {}
         }

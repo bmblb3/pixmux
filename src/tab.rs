@@ -23,8 +23,8 @@ impl Tab {
         }
     }
 
-    pub fn previous(&self) -> Self {
-        self.next()
+    pub fn all() -> Vec<Self> {
+        vec![Tab::Data, Tab::Image]
     }
 
     pub fn titles() -> Vec<&'static str> {
