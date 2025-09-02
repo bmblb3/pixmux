@@ -13,8 +13,8 @@ use crate::tab::Tab;
 pub struct App {
     running: bool,
     current_tab: Tab,
-    pub headers: Vec<String>,
-    pub table: Vec<Vec<String>>,
+    pub col_headers: Vec<String>,
+    pub table_rows: Vec<Vec<String>>,
     pub current_row_index: u16,
 }
 
@@ -24,8 +24,8 @@ impl App {
         Ok(Self {
             running: false,
             current_tab: Tab::Data,
-            headers,
-            table,
+            col_headers: headers,
+            table_rows: table,
             current_row_index: 0,
         })
     }
@@ -59,7 +59,7 @@ impl App {
     }
 
     pub fn next_row(&mut self) {
-        if self.current_row_index < (self.table.len() as u16 - 1) {
+        if self.current_row_index < (self.table_rows.len() as u16 - 1) {
             self.current_row_index += 1;
         }
     }

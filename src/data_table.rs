@@ -11,11 +11,11 @@ pub struct DataTable;
 
 impl DataTable {
     pub fn create_widget(app: &App) -> Table<'static> {
-        let collen = app.headers.len();
+        let collen = app.col_headers.len();
         let constraints = vec![Constraint::Length(20); collen];
 
         let rows = app
-            .table
+            .table_rows
             .iter()
             .enumerate()
             .map(|(index, row)| {
@@ -34,7 +34,7 @@ impl DataTable {
         Table::new(rows, constraints)
             .header(
                 Row::new(
-                    app.headers
+                    app.col_headers
                         .iter()
                         .map(|h| Cell::from(h.clone()))
                         .collect::<Vec<_>>(),
