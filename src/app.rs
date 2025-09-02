@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, path::PathBuf};
 
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
@@ -19,7 +19,7 @@ pub struct App {
     pub col_headers: Vec<String>,
     pub table_rows: Vec<Vec<String>>,
     pub imgdir_paths: Vec<std::path::PathBuf>,
-    pub current_row_index: u16,
+    pub current_row_index: usize,
     pub root_imgpane: Pane,
     pub current_imgpane_id: usize,
 }
@@ -35,7 +35,7 @@ impl App {
             imgdir_paths,
             current_row_index: 0,
             current_imgpane_id: 0,
-            root_imgpane: Pane::Leaf,
+            root_imgpane: Pane::leaf(),
         })
     }
 
@@ -101,7 +101,7 @@ impl App {
                         if let Some(ext) = path.extension() {
                             if let Some(ext_str) = ext.to_str() {
                                 if image_extensions.contains(&ext_str.to_lowercase().as_str()) {
-                                    if let Some(basename) = path.file_stem() {
+                                    if let Some(basename) = path.file_name() {
                                         if let Some(basename_str) = basename.to_str() {
                                             basenames.insert(basename_str.to_string());
                                         }
@@ -130,13 +130,23 @@ impl App {
         let basenames: Vec<_> = self.collect_image_basenames().into_iter().collect();
         basenames.get(*index).cloned()
     }
+    #[allow(dead_code)]
+    pub fn get_imgdir_path(&self, index: &usize) -> &PathBuf {
+        &self.imgdir_paths[*index]
+    }
+
+    #[allow(dead_code)]
+    pub fn get_fullimgpath(&self, image_index: &usize, row_index: &usize) -> Option<PathBuf> {
+        let basename = self.get_basename(image_index)?;
+        Some(self.get_imgdir_path(row_index).join(basename))
+    }
 
     pub fn next_tab(&mut self) {
         self.current_tab = self.current_tab.next();
     }
 
     pub fn next_row(&mut self) {
-        if self.current_row_index < (self.table_rows.len() as u16 - 1) {
+        if self.current_row_index < (self.table_rows.len() - 1) {
             self.current_row_index += 1;
         }
     }
@@ -253,7 +263,7 @@ impl App {
 
     fn get_total_imgpanes(_pane: &Pane, _counter: &mut u16) {
         match _pane {
-            Pane::Leaf => *_counter += 1,
+            Pane::Leaf { .. } => *_counter += 1,
             Pane::Split { first, second, .. } => {
                 Self::get_total_imgpanes(first, _counter);
                 Self::get_total_imgpanes(second, _counter);
@@ -299,7 +309,7 @@ impl App {
 
                 false
             }
-            Pane::Leaf => {
+            Pane::Leaf { .. } => {
                 if candidate_imgpane_id != target_imgpane_id {
                     *candidate_imgpane_id += 1;
                     return false;
@@ -372,7 +382,7 @@ impl App {
                     first_resized || second_resized,
                 )
             }
-            Pane::Leaf => {
+            Pane::Leaf { .. } => {
                 let found_leaf = candidate_imgpane_id == target_imgpane_id;
                 *candidate_imgpane_id += 1;
                 (found_leaf, false)
@@ -422,7 +432,7 @@ impl App {
                     first_removed || second_removed,
                 )
             }
-            Pane::Leaf => {
+            Pane::Leaf { .. } => {
                 let found_leaf = candidate_imgpane_id == target_imgpane_id;
                 *candidate_imgpane_id += 1;
                 (found_leaf, false)

@@ -14,28 +14,37 @@ pub enum ChildPanePosition {
     RightOrBottom,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub enum Pane {
-    #[default]
-    Leaf,
+    Leaf {
+        image_id: usize,
+    },
     Split {
         direction: Direction,
         pct: u8,
-        image_id: usize,
         first: Box<Pane>,
         second: Box<Pane>,
     },
 }
 
+impl Default for Pane {
+    fn default() -> Self {
+        Self::Leaf { image_id: 0 }
+    }
+}
+
 impl Pane {
+    pub fn leaf() -> Self {
+        Self::Leaf { image_id: 0 }
+    }
+
     pub fn split(direction: Direction) -> Self {
         Self::Split {
             direction,
-            image_id: 999,
             pct: 50,
-            first: Box::new(Pane::Leaf),
-            second: Box::new(Pane::Leaf),
+            first: Box::new(Pane::leaf()),
+            second: Box::new(Pane::leaf()),
         }
     }
 }
@@ -52,25 +61,24 @@ impl ImageLayout {
         app: &App,
     ) {
         match pane {
-            Pane::Leaf => {
-                let imagefile = "/home/akucwh/techsim_root/nsa/fluidcfd/01_Ongoing/01_ATS/Increment/PI2526/VES-12345__DORA_Iteration_Work/930__cup_wing_doe/concept_1.2/doe.46/MB3/T_evap.png";
-                let picker = Picker::from_query_stdio().unwrap();
-                let image_source = image::ImageReader::open(imagefile)
-                    .unwrap()
-                    .decode()
-                    .unwrap();
-                let mut image = picker.new_resize_protocol(image_source);
-
+            Pane::Leaf { image_id } => {
                 let block = Block::bordered().border_type(BorderType::QuadrantInside);
-                if *pane_enum == app.current_imgpane_id {
-                    frame.render_widget(block.clone().style(Color::Yellow), area);
-                    frame.render_stateful_widget(
-                        StatefulImage::default(),
-                        block.inner(area),
-                        &mut image,
-                    );
-                } else {
-                    frame.render_widget(block, area);
+                let imagefile = app.get_fullimgpath(image_id, &app.current_row_index);
+                match imagefile {
+                    Some(f) => {
+                        let picker = Picker::from_query_stdio().unwrap();
+                        let image_source = image::ImageReader::open(f).unwrap().decode().unwrap();
+                        let mut image = picker.new_resize_protocol(image_source);
+                        frame.render_widget(block.clone().style(Color::Yellow), area);
+                        frame.render_stateful_widget(
+                            StatefulImage::default(),
+                            block.inner(area),
+                            &mut image,
+                        );
+                    }
+                    _ => {
+                        frame.render_widget(block, area);
+                    }
                 }
 
                 *pane_enum += 1;
