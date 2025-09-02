@@ -121,11 +121,11 @@ impl App {
             (_, KeyCode::Up) | (_, KeyCode::Down) => self.handle_updown(key.code),
             //
             (_, KeyCode::Char('n')) => match self.current_tab {
-                Tab::Image => self.next_imgpane(),
+                Tab::Image => self.cycle_imagepane(CycleDirection::Forward),
                 Tab::Data => {}
             },
             (KeyModifiers::SHIFT, KeyCode::Char('N')) => match self.current_tab {
-                Tab::Image => self.prev_imgpane(),
+                Tab::Image => self.cycle_imagepane(CycleDirection::Backward),
                 Tab::Data => {}
             },
             _ => {}
@@ -144,21 +144,15 @@ impl App {
         self.running = false;
     }
 
-    fn nav_imgpane(&mut self, forward: bool) {
+    fn cycle_imagepane(&mut self, dir: CycleDirection) {
         let mut pane_count = 0;
         Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
-        let delta = match forward {
-            true => 1,
-            false => pane_count - 1,
+        let delta = match dir {
+            CycleDirection::Forward => 1,
+            CycleDirection::Backward => pane_count - 1,
         };
         self.current_imgpane_id += delta as usize;
         self.current_imgpane_id %= pane_count as usize;
-    }
-    fn next_imgpane(&mut self) {
-        self.nav_imgpane(true)
-    }
-    fn prev_imgpane(&mut self) {
-        self.nav_imgpane(false)
     }
 
     fn get_total_imgpanes(_pane: &Pane, _counter: &mut u16) {
@@ -170,4 +164,9 @@ impl App {
             }
         }
     }
+}
+
+pub enum CycleDirection {
+    Forward,
+    Backward,
 }
