@@ -82,12 +82,6 @@ impl App {
         }
     }
 
-    // pub fn next_imgpane(&mut self) {
-    //     if self.current_row_index > 0 {
-    //         self.current_row_index -= 1;
-    //     }
-    // }
-
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
         while self.running {
