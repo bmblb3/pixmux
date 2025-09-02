@@ -120,10 +120,10 @@ impl App {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             //
-            (_, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
-            (_, KeyCode::Up) | (_, KeyCode::Down) => self.handle_updown(key.code),
+            (KeyModifiers::NONE, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
+            (KeyModifiers::NONE, KeyCode::Up | KeyCode::Down) => self.handle_updown(key.code),
             //
-            (_, KeyCode::Char('n')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('n')) => match self.current_tab {
                 Tab::Image => self.cycle_imagepane(CycleDirection::Forward),
                 Tab::Data => {}
             },
