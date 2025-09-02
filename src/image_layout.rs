@@ -49,7 +49,7 @@ impl ImageLayout {
         area: Rect,
         pane: &Pane,
         pane_enum: &mut usize,
-        current_pane_id: &usize,
+        app: &App,
     ) {
         match pane {
             Pane::Leaf => {
@@ -62,7 +62,7 @@ impl ImageLayout {
                 let mut image = picker.new_resize_protocol(image_source);
 
                 let block = Block::bordered().border_type(BorderType::QuadrantInside);
-                if pane_enum == current_pane_id {
+                if *pane_enum == app.current_imgpane_id {
                     frame.render_widget(block.clone().style(Color::Yellow), area);
                     frame.render_stateful_widget(
                         StatefulImage::default(),
@@ -91,20 +91,14 @@ impl ImageLayout {
                     .direction(*direction)
                     .constraints(constraints)
                     .split(area);
-                Self::render_imgpane(frame, chunks[0], first, pane_enum, current_pane_id);
-                Self::render_imgpane(frame, chunks[1], second, pane_enum, current_pane_id);
+                Self::render_imgpane(frame, chunks[0], first, pane_enum, app);
+                Self::render_imgpane(frame, chunks[1], second, pane_enum, app);
             }
         }
     }
 
     pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         let mut imgpane_enum = 0;
-        Self::render_imgpane(
-            frame,
-            area,
-            &app.root_imgpane,
-            &mut imgpane_enum,
-            &app.current_imgpane_id,
-        );
+        Self::render_imgpane(frame, area, &app.root_imgpane, &mut imgpane_enum, app);
     }
 }
