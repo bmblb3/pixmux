@@ -30,22 +30,7 @@ impl App {
             table_rows: table,
             current_row_index: 0,
             current_imgpane_id: 0,
-            root_imgpane: Pane::Split {
-                direction: Direction::Vertical,
-                pct: 50,
-                first: Box::new(Pane::Split {
-                    direction: Direction::Horizontal,
-                    pct: 50,
-                    first: Box::new(Pane::Leaf),
-                    second: Box::new(Pane::Split {
-                        pct: 50,
-                        direction: Direction::Vertical,
-                        first: Box::new(Pane::Leaf),
-                        second: Box::new(Pane::Leaf),
-                    }),
-                }),
-                second: Box::new(Pane::Leaf),
-            },
+            root_imgpane: Pane::Leaf,
         })
     }
 
