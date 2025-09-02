@@ -17,6 +17,7 @@ pub struct App {
     pub table_rows: Vec<Vec<String>>,
     pub current_row_index: u16,
     pub root_imgpane: Pane,
+    pub current_imgpane_id: usize,
 }
 
 impl App {
@@ -28,6 +29,7 @@ impl App {
             col_headers: headers,
             table_rows: table,
             current_row_index: 0,
+            current_imgpane_id: 0,
             root_imgpane: Pane::Split {
                 direction: Direction::Vertical,
                 first: Box::new(Pane::Split {

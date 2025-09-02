@@ -1,7 +1,8 @@
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Block, Paragraph},
+    style::Color,
+    widgets::Block,
 };
 
 use crate::app::App;
@@ -28,10 +29,22 @@ pub enum Pane {
 pub struct ImageLayout;
 
 impl ImageLayout {
-    fn render_imgpane(frame: &mut Frame, area: Rect, pane: &Pane) {
+    fn render_imgpane(
+        frame: &mut Frame,
+        area: Rect,
+        pane: &Pane,
+        pane_enum: &mut usize,
+        current_pane_id: &usize,
+    ) {
         match pane {
             Pane::Leaf => {
-                frame.render_widget(Paragraph::new("Image Pane").block(Block::bordered()), area);
+                if pane_enum == current_pane_id {
+                    frame.render_widget(Block::bordered().style(Color::Yellow), area);
+                } else {
+                    frame.render_widget(Block::bordered(), area);
+                }
+
+                *pane_enum += 1;
             }
             Pane::Split {
                 direction,
@@ -43,13 +56,20 @@ impl ImageLayout {
                     .direction(*direction)
                     .constraints(constraints)
                     .split(area);
-                Self::render_imgpane(frame, chunks[0], first);
-                Self::render_imgpane(frame, chunks[1], second);
+                Self::render_imgpane(frame, chunks[0], first, pane_enum, current_pane_id);
+                Self::render_imgpane(frame, chunks[1], second, pane_enum, current_pane_id);
             }
         }
     }
 
     pub fn render(frame: &mut Frame, area: Rect, app: &App) {
-        Self::render_imgpane(frame, area, &app.root_imgpane);
+        let mut imgpane_enum = 0;
+        Self::render_imgpane(
+            frame,
+            area,
+            &app.root_imgpane,
+            &mut imgpane_enum,
+            &app.current_imgpane_id,
+        );
     }
 }
