@@ -4,6 +4,7 @@ use color_eyre::Result;
 
 mod app;
 mod data_table;
+mod image_layout;
 mod tab;
 
 use app::App;

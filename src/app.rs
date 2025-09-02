@@ -7,15 +7,17 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
 };
 
-use crate::tab::Tab;
+use crate::{image_layout::Pane, tab::Tab};
 
 #[derive(Debug, Default)]
 pub struct App {
     running: bool,
     current_tab: Tab,
-    pub headers: Vec<String>,
-    pub table: Vec<Vec<String>>,
+    pub col_headers: Vec<String>,
+    pub table_rows: Vec<Vec<String>>,
     pub current_row_index: u16,
+    pub root_imgpane: Pane,
+    pub current_imgpane_id: usize,
 }
 
 impl App {
@@ -24,9 +26,26 @@ impl App {
         Ok(Self {
             running: false,
             current_tab: Tab::Data,
-            headers,
-            table,
+            col_headers: headers,
+            table_rows: table,
             current_row_index: 0,
+            current_imgpane_id: 0,
+            root_imgpane: Pane::Split {
+                direction: Direction::Vertical,
+                pct: 50,
+                first: Box::new(Pane::Split {
+                    direction: Direction::Horizontal,
+                    pct: 50,
+                    first: Box::new(Pane::Leaf),
+                    second: Box::new(Pane::Split {
+                        pct: 50,
+                        direction: Direction::Vertical,
+                        first: Box::new(Pane::Leaf),
+                        second: Box::new(Pane::Leaf),
+                    }),
+                }),
+                second: Box::new(Pane::Leaf),
+            },
         })
     }
 
@@ -54,12 +73,8 @@ impl App {
         self.current_tab = self.current_tab.next();
     }
 
-    pub fn previous_tab(&mut self) {
-        self.current_tab = self.current_tab.previous();
-    }
-
     pub fn next_row(&mut self) {
-        if self.current_row_index < (self.table.len() as u16 - 1) {
+        if self.current_row_index < (self.table_rows.len() as u16 - 1) {
             self.current_row_index += 1;
         }
     }
@@ -101,11 +116,52 @@ impl App {
 
     fn on_key_event(&mut self, key: KeyEvent) {
         match (key.modifiers, key.code) {
+            //
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
-            (_, KeyCode::Tab) => self.next_tab(),
-            (KeyModifiers::SHIFT, KeyCode::BackTab) => self.previous_tab(),
-            (_, KeyCode::Up) | (_, KeyCode::Down) => self.handle_updown(key.code),
+            //
+            (KeyModifiers::NONE, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
+            (KeyModifiers::NONE, KeyCode::Up | KeyCode::Down) => self.handle_updown(key.code),
+            //
+            (KeyModifiers::NONE, KeyCode::Char('n')) => match self.current_tab {
+                Tab::Image => self.cycle_imagepane(CycleDirection::Forward),
+                Tab::Data => {}
+            },
+            (KeyModifiers::SHIFT, KeyCode::Char('N')) => match self.current_tab {
+                Tab::Image => self.cycle_imagepane(CycleDirection::Backward),
+                Tab::Data => {}
+            },
+            //
+            (KeyModifiers::ALT, KeyCode::Char('v')) => match self.current_tab {
+                Tab::Image => self.split_imgpane(Direction::Horizontal),
+                Tab::Data => {}
+            },
+            (KeyModifiers::ALT, KeyCode::Char('s')) => match self.current_tab {
+                Tab::Image => self.split_imgpane(Direction::Vertical),
+                Tab::Data => {}
+            },
+            //
+            (KeyModifiers::ALT, KeyCode::Left) => match self.current_tab {
+                Tab::Image => self.resize_imgpane(-5, Direction::Horizontal),
+                Tab::Data => {}
+            },
+            (KeyModifiers::ALT, KeyCode::Right) => match self.current_tab {
+                Tab::Image => self.resize_imgpane(5, Direction::Horizontal),
+                Tab::Data => {}
+            },
+            (KeyModifiers::ALT, KeyCode::Up) => match self.current_tab {
+                Tab::Image => self.resize_imgpane(-5, Direction::Vertical),
+                Tab::Data => {}
+            },
+            (KeyModifiers::ALT, KeyCode::Down) => match self.current_tab {
+                Tab::Image => self.resize_imgpane(5, Direction::Vertical),
+                Tab::Data => {}
+            },
+            //
+            (KeyModifiers::ALT, KeyCode::Char('x')) => match self.current_tab {
+                Tab::Image => self.remove_imgpane(),
+                Tab::Data => {}
+            },
             _ => {}
         }
     }
@@ -121,4 +177,204 @@ impl App {
     fn quit(&mut self) {
         self.running = false;
     }
+
+    fn cycle_imagepane(&mut self, dir: CycleDirection) {
+        let mut pane_count = 0;
+        Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
+        let delta = match dir {
+            CycleDirection::Forward => 1,
+            CycleDirection::Backward => pane_count - 1,
+        };
+        self.current_imgpane_id += delta as usize;
+        self.current_imgpane_id %= pane_count as usize;
+    }
+
+    fn get_total_imgpanes(_pane: &Pane, _counter: &mut u16) {
+        match _pane {
+            Pane::Leaf => *_counter += 1,
+            Pane::Split { first, second, .. } => {
+                Self::get_total_imgpanes(first, _counter);
+                Self::get_total_imgpanes(second, _counter);
+            }
+        }
+    }
+
+    fn split_imgpane(&mut self, split_direction: Direction) {
+        let mut candidate_imgpane_id = 0;
+        Self::split_imgpane_impl(
+            &mut self.root_imgpane,
+            &self.current_imgpane_id,
+            &mut candidate_imgpane_id,
+            &split_direction,
+        );
+    }
+
+    fn split_imgpane_impl(
+        pane: &mut Pane,
+        target_imgpane_id: &usize,
+        candidate_imgpane_id: &mut usize,
+        split_direction: &Direction,
+    ) -> bool {
+        match pane {
+            Pane::Split { first, second, .. } => {
+                if Self::split_imgpane_impl(
+                    first,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    split_direction,
+                ) {
+                    return true;
+                }
+
+                if Self::split_imgpane_impl(
+                    second,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    split_direction,
+                ) {
+                    return true;
+                }
+
+                false
+            }
+            Pane::Leaf => {
+                if candidate_imgpane_id != target_imgpane_id {
+                    *candidate_imgpane_id += 1;
+                    return false;
+                }
+                *pane = Pane::Split {
+                    direction: *split_direction,
+                    pct: 50,
+                    first: Box::new(Pane::Leaf),
+                    second: Box::new(Pane::Leaf),
+                };
+                true
+            }
+        }
+    }
+
+    fn resize_imgpane(&mut self, delta: i8, resize_direction: Direction) {
+        let mut candidate_imgpane_id = 0;
+        Self::resize_imgpane_impl(
+            &mut self.root_imgpane,
+            &self.current_imgpane_id,
+            &mut candidate_imgpane_id,
+            &delta,
+            &resize_direction,
+        );
+    }
+
+    fn resize_imgpane_impl(
+        pane: &mut Pane,
+        target_imgpane_id: &usize,
+        candidate_imgpane_id: &mut usize,
+        delta: &i8,
+        resize_direction: &Direction,
+    ) -> (bool, bool) // found_leaf, resized
+    {
+        match pane {
+            Pane::Split {
+                direction,
+                pct,
+                first,
+                second,
+                ..
+            } => {
+                let (first_found_leaf, first_resized) = Self::resize_imgpane_impl(
+                    first,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    delta,
+                    resize_direction,
+                );
+                if first_resized {
+                    return (first_found_leaf, first_resized);
+                }
+                if first_found_leaf && direction == resize_direction {
+                    *pct = ((*pct as i8) + delta).clamp(5, 95) as u8;
+                    return (first_found_leaf, true);
+                }
+
+                let (second_found_leaf, second_resized) = Self::resize_imgpane_impl(
+                    second,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    delta,
+                    resize_direction,
+                );
+                if second_resized {
+                    return (second_found_leaf, second_resized);
+                }
+                if second_found_leaf && direction == resize_direction {
+                    *pct = ((*pct as i8) + delta).clamp(5, 95) as u8;
+                    return (second_found_leaf, true);
+                }
+
+                (
+                    first_found_leaf || second_found_leaf,
+                    first_resized || second_resized,
+                )
+            }
+            Pane::Leaf => {
+                let found_leaf = candidate_imgpane_id == target_imgpane_id;
+                *candidate_imgpane_id += 1;
+                (found_leaf, false)
+            }
+        }
+    }
+
+    fn remove_imgpane(&mut self) {
+        let mut candidate_imgpane_id = 0;
+        Self::remove_imgpane_impl(
+            &mut self.root_imgpane,
+            &self.current_imgpane_id,
+            &mut candidate_imgpane_id,
+        );
+    }
+
+    fn remove_imgpane_impl(
+        pane: &mut Pane,
+        target_imgpane_id: &usize,
+        candidate_imgpane_id: &mut usize,
+    ) -> (bool, bool) // found_leaf, removed
+    {
+        match pane {
+            Pane::Split { first, second, .. } => {
+                let (first_found_leaf, first_removed) =
+                    Self::remove_imgpane_impl(first, target_imgpane_id, candidate_imgpane_id);
+                if first_removed {
+                    return (first_found_leaf, first_removed);
+                }
+                if first_found_leaf {
+                    *pane = *second.clone();
+                    return (first_found_leaf, true);
+                }
+
+                let (second_found_leaf, second_removed) =
+                    Self::remove_imgpane_impl(second, target_imgpane_id, candidate_imgpane_id);
+                if second_removed {
+                    return (second_found_leaf, second_removed);
+                }
+                if second_found_leaf {
+                    *pane = *first.clone();
+                    return (second_found_leaf, true);
+                }
+
+                (
+                    first_found_leaf || second_found_leaf,
+                    first_removed || second_removed,
+                )
+            }
+            Pane::Leaf => {
+                let found_leaf = candidate_imgpane_id == target_imgpane_id;
+                *candidate_imgpane_id += 1;
+                (found_leaf, false)
+            }
+        }
+    }
+}
+
+pub enum CycleDirection {
+    Forward,
+    Backward,
 }

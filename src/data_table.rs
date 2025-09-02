@@ -1,4 +1,8 @@
-use ratatui::{layout::Constraint, style::Stylize, widgets::Table};
+use ratatui::{
+    layout::Constraint,
+    style::Stylize,
+    widgets::{Block, Borders, Cell, Row, Table},
+};
 
 use crate::App;
 
@@ -6,17 +10,12 @@ use crate::App;
 pub struct DataTable;
 
 impl DataTable {
-    pub fn new() -> Self {
-        Self
-    }
-
-    pub fn create_widget(&self, app: &App) -> Table<'static> {
-        let collen = app.headers.len();
+    pub fn create_widget(app: &App) -> Table<'static> {
+        let collen = app.col_headers.len();
         let constraints = vec![Constraint::Length(20); collen];
 
-        use ratatui::widgets::{Block, Borders, Cell, Row, Table};
         let rows = app
-            .table
+            .table_rows
             .iter()
             .enumerate()
             .map(|(index, row)| {
@@ -35,7 +34,7 @@ impl DataTable {
         Table::new(rows, constraints)
             .header(
                 Row::new(
-                    app.headers
+                    app.col_headers
                         .iter()
                         .map(|h| Cell::from(h.clone()))
                         .collect::<Vec<_>>(),

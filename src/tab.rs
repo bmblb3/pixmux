@@ -2,11 +2,11 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Style},
-    widgets::{Block, Paragraph, Tabs},
+    widgets::{Block, Tabs},
 };
 
-use crate::App;
 use crate::data_table::DataTable;
+use crate::{App, image_layout::ImageLayout};
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Tab {
@@ -21,10 +21,6 @@ impl Tab {
             Tab::Data => Tab::Image,
             Tab::Image => Tab::Data,
         }
-    }
-
-    pub fn previous(&self) -> Self {
-        self.next()
     }
 
     pub fn titles() -> Vec<&'static str> {
@@ -56,14 +52,10 @@ impl Tab {
     pub fn render(&self, frame: &mut Frame, area: Rect, app: &App) {
         match self {
             Tab::Data => {
-                let data_table = DataTable::new();
-                frame.render_widget(data_table.create_widget(app), area);
+                frame.render_widget(DataTable::create_widget(app), area);
             }
             Tab::Image => {
-                frame.render_widget(
-                    Paragraph::new("Image content here").block(Block::bordered()),
-                    area,
-                );
+                ImageLayout::render(frame, area, app);
             }
         }
     }
