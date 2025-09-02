@@ -23,10 +23,6 @@ impl Tab {
         }
     }
 
-    pub fn all() -> Vec<Self> {
-        vec![Tab::Data, Tab::Image]
-    }
-
     pub fn titles() -> Vec<&'static str> {
         let order = [Tab::Data, Tab::Image];
         order
