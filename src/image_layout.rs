@@ -20,6 +20,7 @@ pub enum Pane {
     Leaf,
     Split {
         direction: Direction,
+        pct: u8,
         first: Box<Pane>,
         second: Box<Pane>,
     },
@@ -48,10 +49,14 @@ impl ImageLayout {
             }
             Pane::Split {
                 direction,
+                pct,
                 first,
                 second,
             } => {
-                let constraints = vec![Constraint::Percentage(50), Constraint::Percentage(50)];
+                let constraints = vec![
+                    Constraint::Percentage(*pct as u16),
+                    Constraint::Percentage((100 - pct) as u16),
+                ];
                 let chunks = Layout::default()
                     .direction(*direction)
                     .constraints(constraints)
