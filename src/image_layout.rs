@@ -22,9 +22,22 @@ pub enum Pane {
     Split {
         direction: Direction,
         pct: u8,
+        image_id: usize,
         first: Box<Pane>,
         second: Box<Pane>,
     },
+}
+
+impl Pane {
+    pub fn split(direction: Direction) -> Self {
+        Self::Split {
+            direction,
+            image_id: 999,
+            pct: 50,
+            first: Box::new(Pane::Leaf),
+            second: Box::new(Pane::Leaf),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -67,6 +80,7 @@ impl ImageLayout {
                 pct,
                 first,
                 second,
+                ..
             } => {
                 let constraints = vec![
                     Constraint::Percentage(*pct as u16),
