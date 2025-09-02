@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, path::PathBuf};
 
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
@@ -9,49 +9,122 @@ use ratatui::{
 
 use crate::{image_layout::Pane, tab::Tab};
 
+type CsvData = (Vec<String>, Vec<Vec<String>>, Vec<std::path::PathBuf>);
+
 #[derive(Debug, Default)]
 pub struct App {
     running: bool,
     current_tab: Tab,
     pub col_headers: Vec<String>,
     pub table_rows: Vec<Vec<String>>,
-    pub current_row_index: u16,
+    pub imgdir_paths: Vec<std::path::PathBuf>,
+    pub current_row_index: usize,
     pub root_imgpane: Pane,
     pub current_imgpane_id: usize,
 }
 
 impl App {
     pub fn new(csv_path: &str) -> Result<Self> {
-        let (headers, table) = Self::read_csv(csv_path)?;
+        let (col_headers, table_rows, imgdir_paths) = Self::read_csv(csv_path)?;
         Ok(Self {
             running: false,
             current_tab: Tab::Data,
-            col_headers: headers,
-            table_rows: table,
+            col_headers,
+            table_rows,
+            imgdir_paths,
             current_row_index: 0,
             current_imgpane_id: 0,
-            root_imgpane: Pane::Leaf,
+            root_imgpane: Pane::leaf(),
         })
     }
 
-    fn read_csv(path: &str) -> Result<(Vec<String>, Vec<Vec<String>>)> {
+    fn read_csv(path: &str) -> Result<CsvData> {
         let mut file = File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
 
         let mut lines = contents.lines();
-        let headers = lines
+        let header_line = lines
             .next()
-            .ok_or_else(|| color_eyre::eyre::eyre!("Empty CSV file"))?
-            .split(',')
-            .map(|s| s.trim().to_string())
+            .ok_or_else(|| color_eyre::eyre::eyre!("Empty CSV file"))?;
+
+        let all_headers: Vec<&str> = header_line.split(',').map(|s| s.trim()).collect();
+        let underscore_col_idx = all_headers.iter().position(|&h| h == "_");
+
+        let headers: Vec<String> = all_headers
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| Some(*i) != underscore_col_idx)
+            .map(|(_, &h)| h.to_string())
             .collect();
 
-        let table = lines
-            .map(|line| line.split(',').map(|s| s.trim().to_string()).collect())
-            .collect();
+        let csv_dir = std::path::Path::new(path)
+            .parent()
+            .unwrap_or(std::path::Path::new("."));
+        let mut dir_paths = Vec::new();
+        let mut table = Vec::new();
 
-        Ok((headers, table))
+        for line in lines {
+            let row: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
+
+            if let Some(idx) = underscore_col_idx {
+                if idx < row.len() {
+                    let rel_path = row[idx];
+                    let abs_path = csv_dir.join(rel_path);
+                    dir_paths.push(abs_path);
+                }
+            }
+
+            let filtered_row: Vec<String> = row
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| Some(*i) != underscore_col_idx)
+                .map(|(_, &cell)| cell.to_string())
+                .collect();
+            table.push(filtered_row);
+        }
+
+        Ok((headers, table, dir_paths))
+    }
+
+    pub fn collect_image_basenames(&self) -> std::collections::BTreeSet<String> {
+        let mut basenames = std::collections::BTreeSet::new();
+        let image_extensions = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp"];
+
+        for dir_path in &self.imgdir_paths {
+            if let Ok(entries) = std::fs::read_dir(dir_path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Some(ext) = path.extension() {
+                            if let Some(ext_str) = ext.to_str() {
+                                if image_extensions.contains(&ext_str.to_lowercase().as_str()) {
+                                    if let Some(basename) = path.file_name() {
+                                        if let Some(basename_str) = basename.to_str() {
+                                            basenames.insert(basename_str.to_string());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        basenames
+    }
+
+    pub fn get_basename(&self, index: &usize) -> Option<String> {
+        let basenames: Vec<_> = self.collect_image_basenames().into_iter().collect();
+        basenames.get(*index).cloned()
+    }
+    pub fn get_imgdir_path(&self, index: &usize) -> &PathBuf {
+        &self.imgdir_paths[*index]
+    }
+
+    pub fn get_fullimgpath(&self, image_index: &usize, row_index: &usize) -> Option<PathBuf> {
+        let basename = self.get_basename(image_index)?;
+        Some(self.get_imgdir_path(row_index).join(basename))
     }
 
     pub fn next_tab(&mut self) {
@@ -59,7 +132,7 @@ impl App {
     }
 
     pub fn next_row(&mut self) {
-        if self.current_row_index < (self.table_rows.len() as u16 - 1) {
+        if self.current_row_index < (self.table_rows.len() - 1) {
             self.current_row_index += 1;
         }
     }
@@ -147,6 +220,11 @@ impl App {
                 Tab::Image => self.remove_imgpane(),
                 Tab::Data => {}
             },
+            //
+            (_, KeyCode::Char('d')) => match self.current_tab {
+                Tab::Image => self.next_img(),
+                Tab::Data => {}
+            },
             _ => {}
         }
     }
@@ -174,9 +252,72 @@ impl App {
         self.current_imgpane_id %= pane_count as usize;
     }
 
+    fn set_img_impl(
+        pane: &mut Pane,
+        target_imgpane_id: &usize,
+        candidate_imgpane_id: &mut usize,
+        nr_images: &usize,
+        cycle_direction: &CycleDirection,
+    ) -> bool {
+        match pane {
+            Pane::Split { first, second, .. } => {
+                if Self::set_img_impl(
+                    first,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    nr_images,
+                    cycle_direction,
+                ) {
+                    return true;
+                }
+
+                if Self::set_img_impl(
+                    second,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    nr_images,
+                    cycle_direction,
+                ) {
+                    return true;
+                }
+
+                false
+            }
+            Pane::Leaf { image_id } => {
+                if candidate_imgpane_id != target_imgpane_id {
+                    *candidate_imgpane_id += 1;
+                    return false;
+                }
+                match cycle_direction {
+                    CycleDirection::Forward => {
+                        *image_id += 1;
+                        *image_id %= nr_images;
+                    }
+                    CycleDirection::Backward => {
+                        *image_id += nr_images - 1;
+                        *image_id %= nr_images;
+                    }
+                }
+                true
+            }
+        }
+    }
+
+    fn next_img(&mut self) {
+        let mut candidate_imgpane_id = 0;
+        let nr_images = self.collect_image_basenames().into_iter().len();
+        Self::set_img_impl(
+            &mut self.root_imgpane,
+            &self.current_imgpane_id,
+            &mut candidate_imgpane_id,
+            &nr_images,
+            &CycleDirection::Forward,
+        );
+    }
+
     fn get_total_imgpanes(_pane: &Pane, _counter: &mut u16) {
         match _pane {
-            Pane::Leaf => *_counter += 1,
+            Pane::Leaf { .. } => *_counter += 1,
             Pane::Split { first, second, .. } => {
                 Self::get_total_imgpanes(first, _counter);
                 Self::get_total_imgpanes(second, _counter);
@@ -222,7 +363,7 @@ impl App {
 
                 false
             }
-            Pane::Leaf => {
+            Pane::Leaf { .. } => {
                 if candidate_imgpane_id != target_imgpane_id {
                     *candidate_imgpane_id += 1;
                     return false;
@@ -295,7 +436,7 @@ impl App {
                     first_resized || second_resized,
                 )
             }
-            Pane::Leaf => {
+            Pane::Leaf { .. } => {
                 let found_leaf = candidate_imgpane_id == target_imgpane_id;
                 *candidate_imgpane_id += 1;
                 (found_leaf, false)
@@ -345,7 +486,7 @@ impl App {
                     first_removed || second_removed,
                 )
             }
-            Pane::Leaf => {
+            Pane::Leaf { .. } => {
                 let found_leaf = candidate_imgpane_id == target_imgpane_id;
                 *candidate_imgpane_id += 1;
                 (found_leaf, false)
