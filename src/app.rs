@@ -9,12 +9,16 @@ use ratatui::{
 
 use crate::{image_layout::Pane, tab::Tab};
 
+type CsvData = (Vec<String>, Vec<Vec<String>>, Vec<std::path::PathBuf>);
+
 #[derive(Debug, Default)]
+#[allow(dead_code)]
 pub struct App {
     running: bool,
     current_tab: Tab,
     pub col_headers: Vec<String>,
     pub table_rows: Vec<Vec<String>>,
+    pub imgdir_paths: Vec<std::path::PathBuf>,
     pub current_row_index: u16,
     pub root_imgpane: Pane,
     pub current_imgpane_id: usize,
@@ -22,36 +26,66 @@ pub struct App {
 
 impl App {
     pub fn new(csv_path: &str) -> Result<Self> {
-        let (headers, table) = Self::read_csv(csv_path)?;
+        let (col_headers, table_rows, imgdir_paths) = Self::read_csv(csv_path)?;
         Ok(Self {
             running: false,
             current_tab: Tab::Data,
-            col_headers: headers,
-            table_rows: table,
+            col_headers,
+            table_rows,
+            imgdir_paths,
             current_row_index: 0,
             current_imgpane_id: 0,
             root_imgpane: Pane::Leaf,
         })
     }
 
-    fn read_csv(path: &str) -> Result<(Vec<String>, Vec<Vec<String>>)> {
+    fn read_csv(path: &str) -> Result<CsvData> {
         let mut file = File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
 
         let mut lines = contents.lines();
-        let headers = lines
+        let header_line = lines
             .next()
-            .ok_or_else(|| color_eyre::eyre::eyre!("Empty CSV file"))?
-            .split(',')
-            .map(|s| s.trim().to_string())
+            .ok_or_else(|| color_eyre::eyre::eyre!("Empty CSV file"))?;
+
+        let all_headers: Vec<&str> = header_line.split(',').map(|s| s.trim()).collect();
+        let underscore_col_idx = all_headers.iter().position(|&h| h == "_");
+
+        let headers: Vec<String> = all_headers
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| Some(*i) != underscore_col_idx)
+            .map(|(_, &h)| h.to_string())
             .collect();
 
-        let table = lines
-            .map(|line| line.split(',').map(|s| s.trim().to_string()).collect())
-            .collect();
+        let csv_dir = std::path::Path::new(path)
+            .parent()
+            .unwrap_or(std::path::Path::new("."));
+        let mut dir_paths = Vec::new();
+        let mut table = Vec::new();
 
-        Ok((headers, table))
+        for line in lines {
+            let row: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
+
+            if let Some(idx) = underscore_col_idx {
+                if idx < row.len() {
+                    let rel_path = row[idx];
+                    let abs_path = csv_dir.join(rel_path);
+                    dir_paths.push(abs_path);
+                }
+            }
+
+            let filtered_row: Vec<String> = row
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| Some(*i) != underscore_col_idx)
+                .map(|(_, &cell)| cell.to_string())
+                .collect();
+            table.push(filtered_row);
+        }
+
+        Ok((headers, table, dir_paths))
     }
 
     pub fn next_tab(&mut self) {
