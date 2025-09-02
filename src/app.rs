@@ -82,6 +82,12 @@ impl App {
         }
     }
 
+    // pub fn next_imgpane(&mut self) {
+    //     if self.current_row_index > 0 {
+    //         self.current_row_index -= 1;
+    //     }
+    // }
+
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
         while self.running {
@@ -117,8 +123,17 @@ impl App {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             //
-            (_, KeyCode::Tab) => self.next_tab(),
+            (_, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
             (_, KeyCode::Up) | (_, KeyCode::Down) => self.handle_updown(key.code),
+            //
+            (_, KeyCode::Char('n')) => match self.current_tab {
+                Tab::Image => self.next_imgpane(),
+                Tab::Data => {}
+            },
+            (KeyModifiers::SHIFT, KeyCode::Char('N')) => match self.current_tab {
+                Tab::Image => self.prev_imgpane(),
+                Tab::Data => {}
+            },
             _ => {}
         }
     }
@@ -133,5 +148,32 @@ impl App {
 
     fn quit(&mut self) {
         self.running = false;
+    }
+
+    fn nav_imgpane(&mut self, forward: bool) {
+        let mut pane_count = 0;
+        Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
+        let delta = match forward {
+            true => 1,
+            false => pane_count - 1,
+        };
+        self.current_imgpane_id += delta as usize;
+        self.current_imgpane_id %= pane_count as usize;
+    }
+    fn next_imgpane(&mut self) {
+        self.nav_imgpane(true)
+    }
+    fn prev_imgpane(&mut self) {
+        self.nav_imgpane(false)
+    }
+
+    fn get_total_imgpanes(_pane: &Pane, _counter: &mut u16) {
+        match _pane {
+            Pane::Leaf => *_counter += 1,
+            Pane::Split { first, second, .. } => {
+                Self::get_total_imgpanes(first, _counter);
+                Self::get_total_imgpanes(second, _counter);
+            }
+        }
     }
 }
