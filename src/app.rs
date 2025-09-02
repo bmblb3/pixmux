@@ -28,7 +28,19 @@ impl App {
             col_headers: headers,
             table_rows: table,
             current_row_index: 0,
-            root_image_pane: Pane::Leaf,
+            root_image_pane: Pane::Split {
+                direction: Direction::Vertical,
+                first: Box::new(Pane::Split {
+                    direction: Direction::Horizontal,
+                    first: Box::new(Pane::Leaf),
+                    second: Box::new(Pane::Split {
+                        direction: Direction::Vertical,
+                        first: Box::new(Pane::Leaf),
+                        second: Box::new(Pane::Leaf),
+                    }),
+                }),
+                second: Box::new(Pane::Leaf),
+            },
         })
     }
 
