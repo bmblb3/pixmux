@@ -157,6 +157,11 @@ impl App {
                 Tab::Image => self.resize_imgpane(5, Direction::Vertical),
                 Tab::Data => {}
             },
+            //
+            (KeyModifiers::ALT, KeyCode::Char('x')) => match self.current_tab {
+                Tab::Image => self.remove_imgpane(),
+                Tab::Data => {}
+            },
             _ => {}
         }
     }
@@ -308,6 +313,56 @@ impl App {
                 (
                     first_found_leaf || second_found_leaf,
                     first_resized || second_resized,
+                )
+            }
+            Pane::Leaf => {
+                let found_leaf = candidate_imgpane_id == target_imgpane_id;
+                *candidate_imgpane_id += 1;
+                (found_leaf, false)
+            }
+        }
+    }
+
+    fn remove_imgpane(&mut self) {
+        let mut candidate_imgpane_id = 0;
+        Self::remove_imgpane_impl(
+            &mut self.root_imgpane,
+            &self.current_imgpane_id,
+            &mut candidate_imgpane_id,
+        );
+    }
+
+    fn remove_imgpane_impl(
+        pane: &mut Pane,
+        target_imgpane_id: &usize,
+        candidate_imgpane_id: &mut usize,
+    ) -> (bool, bool) // found_leaf, removed
+    {
+        match pane {
+            Pane::Split { first, second, .. } => {
+                let (first_found_leaf, first_removed) =
+                    Self::remove_imgpane_impl(first, target_imgpane_id, candidate_imgpane_id);
+                if first_removed {
+                    return (first_found_leaf, first_removed);
+                }
+                if first_found_leaf {
+                    *pane = *second.clone();
+                    return (first_found_leaf, true);
+                }
+
+                let (second_found_leaf, second_removed) =
+                    Self::remove_imgpane_impl(second, target_imgpane_id, candidate_imgpane_id);
+                if second_removed {
+                    return (second_found_leaf, second_removed);
+                }
+                if second_found_leaf {
+                    *pane = *first.clone();
+                    return (second_found_leaf, true);
+                }
+
+                (
+                    first_found_leaf || second_found_leaf,
+                    first_removed || second_removed,
                 )
             }
             Pane::Leaf => {

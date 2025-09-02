@@ -13,7 +13,7 @@ pub enum ChildPanePosition {
     RightOrBottom,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 #[allow(dead_code)]
 pub enum Pane {
     #[default]
