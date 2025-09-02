@@ -2,7 +2,7 @@ use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::Color,
-    widgets::Block,
+    widgets::{Block, BorderType},
 };
 
 use crate::app::App;
@@ -39,10 +39,11 @@ impl ImageLayout {
     ) {
         match pane {
             Pane::Leaf => {
+                let block = Block::bordered().border_type(BorderType::QuadrantOutside);
                 if pane_enum == current_pane_id {
-                    frame.render_widget(Block::bordered().style(Color::Yellow), area);
+                    frame.render_widget(block.style(Color::Yellow), area);
                 } else {
-                    frame.render_widget(Block::bordered(), area);
+                    frame.render_widget(block, area);
                 }
 
                 *pane_enum += 1;
