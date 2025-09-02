@@ -88,6 +88,7 @@ impl App {
         Ok((headers, table, dir_paths))
     }
 
+    #[allow(dead_code)]
     pub fn collect_image_basenames(&self) -> std::collections::BTreeSet<String> {
         let mut basenames = std::collections::BTreeSet::new();
         let image_extensions = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp"];
@@ -113,6 +114,21 @@ impl App {
             }
         }
         basenames
+    }
+
+    #[allow(dead_code)]
+    pub fn next_basename(&mut self, index: &mut usize) {
+        let basenames: Vec<_> = self.collect_image_basenames().into_iter().collect();
+        if !basenames.is_empty() {
+            *index += 1;
+            *index %= basenames.len();
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn get_basename(&self, index: &usize) -> Option<String> {
+        let basenames: Vec<_> = self.collect_image_basenames().into_iter().collect();
+        basenames.get(*index).cloned()
     }
 
     pub fn next_tab(&mut self) {
