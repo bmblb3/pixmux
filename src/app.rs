@@ -128,6 +128,15 @@ impl App {
                 Tab::Image => self.cycle_imagepane(CycleDirection::Backward),
                 Tab::Data => {}
             },
+            //
+            (KeyModifiers::CONTROL, KeyCode::Char('v')) => match self.current_tab {
+                Tab::Image => self.split_imgpane(Direction::Horizontal),
+                Tab::Data => {}
+            },
+            (KeyModifiers::CONTROL, KeyCode::Char('s')) => match self.current_tab {
+                Tab::Image => self.split_imgpane(Direction::Vertical),
+                Tab::Data => {}
+            },
             _ => {}
         }
     }
@@ -161,6 +170,59 @@ impl App {
             Pane::Split { first, second, .. } => {
                 Self::get_total_imgpanes(first, _counter);
                 Self::get_total_imgpanes(second, _counter);
+            }
+        }
+    }
+
+    fn split_imgpane(&mut self, split_direction: Direction) {
+        let mut candidate_imgpane_id = 0;
+        Self::split_imgpane_impl(
+            &mut self.root_imgpane,
+            &self.current_imgpane_id,
+            &mut candidate_imgpane_id,
+            &split_direction,
+        );
+    }
+
+    fn split_imgpane_impl(
+        pane: &mut Pane,
+        target_imgpane_id: &usize,
+        candidate_imgpane_id: &mut usize,
+        split_direction: &Direction,
+    ) -> bool {
+        match pane {
+            Pane::Split { first, second, .. } => {
+                if Self::split_imgpane_impl(
+                    first,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    split_direction,
+                ) {
+                    return true;
+                }
+
+                if Self::split_imgpane_impl(
+                    second,
+                    target_imgpane_id,
+                    candidate_imgpane_id,
+                    split_direction,
+                ) {
+                    return true;
+                }
+
+                false
+            }
+            Pane::Leaf => {
+                if candidate_imgpane_id != target_imgpane_id {
+                    *candidate_imgpane_id += 1;
+                    return false;
+                }
+                *pane = Pane::Split {
+                    direction: *split_direction,
+                    first: Box::new(Pane::Leaf),
+                    second: Box::new(Pane::Leaf),
+                };
+                true
             }
         }
     }
