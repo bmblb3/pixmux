@@ -1,12 +1,11 @@
-use ratatui::{
-    Frame,
-    layout::Rect,
-    style::{Color, Style},
-    widgets::{Block, Tabs},
-};
+use ratatui::Frame;
+use ratatui::layout::Rect;
+use ratatui::style::{Color, Style};
+use ratatui::widgets::{Block, Tabs};
 
+use crate::App;
 use crate::data_table::DataTable;
-use crate::{App, image_layout::ImageLayout};
+use crate::image_layout::ImageLayout;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Tab {

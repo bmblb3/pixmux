@@ -1,13 +1,14 @@
-use std::{fs::File, io::Read, path::PathBuf};
+use std::fs::File;
+use std::io::Read;
+use std::path::PathBuf;
 
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use ratatui::{
-    DefaultTerminal, Frame,
-    layout::{Constraint, Direction, Layout},
-};
+use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::{DefaultTerminal, Frame};
 
-use crate::{image_layout::Pane, tab::Tab};
+use crate::image_layout::Pane;
+use crate::tab::Tab;
 
 type CsvData = (Vec<String>, Vec<Vec<String>>, Vec<std::path::PathBuf>);
 

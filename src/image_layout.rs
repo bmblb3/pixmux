@@ -1,10 +1,9 @@
-use ratatui::{
-    Frame,
-    layout::{Constraint, Direction, Layout, Rect},
-    style::Color,
-    widgets::{Block, BorderType},
-};
-use ratatui_image::{StatefulImage, picker::Picker};
+use ratatui::Frame;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::Color;
+use ratatui::widgets::{Block, BorderType};
+use ratatui_image::StatefulImage;
+use ratatui_image::picker::Picker;
 
 use crate::app::App;
 

@@ -1,8 +1,6 @@
-use ratatui::{
-    layout::Constraint,
-    style::Stylize,
-    widgets::{Block, Borders, Cell, Row, Table},
-};
+use ratatui::layout::Constraint;
+use ratatui::style::Stylize;
+use ratatui::widgets::{Block, Borders, Cell, Row, Table};
 
 use crate::App;
 
