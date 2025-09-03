@@ -1,27 +1,30 @@
 use std::path;
 
-use color_eyre::{Result, eyre};
+use color_eyre::Result;
+use color_eyre::eyre::{self, OptionExt};
 
 type CsvData = (Vec<String>, Vec<Vec<String>>, Vec<path::PathBuf>);
 
 pub fn parse_csv(filepath: &path::PathBuf) -> Result<CsvData> {
-    // let (col_headers, table_rows, imgdir_paths) = utils::parse_csv(&csv_path)?;
-
     let csv_dir = filepath
         .parent()
-        .ok_or_else(|| eyre::eyre!("Could not determine parent directory of CSV file"))?;
+        .ok_or_eyre("Could not determine parent directory of CSV file")?;
 
     let mut rdr = csv::Reader::from_path(filepath)?;
 
     let headers: Vec<String> = rdr.headers()?.iter().map(|f| f.to_string()).collect();
-    if !headers.iter().any(|h| h == "_") {
-        return Err(eyre::eyre!("Headers must contain underscore"));
-    }
-    if !headers.iter().any(|h| h != "_") {
-        return Err(eyre::eyre!(
-            "Headers must contain atleast one non-underscore column (for data)"
-        ));
-    }
+
+    headers
+        .iter()
+        .any(|h| h == "_")
+        .then_some(())
+        .ok_or_eyre("Headers must contain underscore")?;
+
+    headers
+        .iter()
+        .any(|h| h != "_")
+        .then_some(())
+        .ok_or_eyre("Headers must contain atleast one non-underscore column (for data)")?;
 
     let records: Vec<csv::StringRecord> = rdr.records().collect::<Result<_, _>>()?;
     let rows: Vec<Vec<String>> = records
