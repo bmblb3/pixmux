@@ -1,4 +1,5 @@
-use std::env;
+#![warn(clippy::used_underscore_binding)]
+use std::{env, path};
 
 use color_eyre::Result;
 
@@ -20,7 +21,7 @@ fn main() -> Result<()> {
     }
 
     let terminal = ratatui::init();
-    let result = App::new(&args[1])?.run(terminal);
+    let result = App::new(path::PathBuf::from(&args[1]))?.run(terminal);
     ratatui::restore();
     result
 }

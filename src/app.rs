@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{self, PathBuf};
 
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
@@ -22,8 +22,8 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(csv_path: &str) -> Result<Self> {
-        let (col_headers, table_rows, imgdir_paths) = utils::parse_csv(csv_path)?;
+    pub fn new(csv_path: path::PathBuf) -> Result<Self> {
+        let (col_headers, table_rows, imgdir_paths) = utils::parse_csv(&csv_path)?;
         Ok(Self {
             running: false,
             current_tab: Tab::Data,
@@ -44,18 +44,14 @@ impl App {
             if let Ok(entries) = std::fs::read_dir(dir_path) {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if path.is_file() {
-                        if let Some(ext) = path.extension() {
-                            if let Some(ext_str) = ext.to_str() {
-                                if image_extensions.contains(&ext_str.to_lowercase().as_str()) {
-                                    if let Some(basename) = path.file_name() {
-                                        if let Some(basename_str) = basename.to_str() {
-                                            basenames.insert(basename_str.to_string());
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    if path.is_file()
+                        && let Some(ext) = path.extension()
+                        && let Some(ext_str) = ext.to_str()
+                        && image_extensions.contains(&ext_str.to_lowercase().as_str())
+                        && let Some(basename) = path.file_name()
+                        && let Some(basename_str) = basename.to_str()
+                    {
+                        basenames.insert(basename_str.to_string());
                     }
                 }
             }
@@ -264,12 +260,12 @@ impl App {
         );
     }
 
-    fn get_total_imgpanes(_pane: &Pane, _counter: &mut u16) {
-        match _pane {
-            Pane::Leaf { .. } => *_counter += 1,
+    fn get_total_imgpanes(pane: &Pane, counter: &mut u16) {
+        match pane {
+            Pane::Leaf { .. } => *counter += 1,
             Pane::Split { first, second, .. } => {
-                Self::get_total_imgpanes(first, _counter);
-                Self::get_total_imgpanes(second, _counter);
+                Self::get_total_imgpanes(first, counter);
+                Self::get_total_imgpanes(second, counter);
             }
         }
     }
