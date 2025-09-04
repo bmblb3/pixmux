@@ -3,3 +3,6 @@ pub use parse_csv::parse_csv;
 
 mod collect_imgfile_basenames;
 pub use collect_imgfile_basenames::collect_imgfile_basenames;
+
+mod cycle_index;
+pub use cycle_index::{CycleDirection, cycle_index};

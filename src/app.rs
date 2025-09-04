@@ -7,7 +7,7 @@ use ratatui::{DefaultTerminal, Frame};
 
 use crate::image_layout::Pane;
 use crate::tab::Tab;
-use crate::utils;
+use crate::utils::{self, CycleDirection, cycle_index};
 
 mod events;
 
@@ -101,14 +101,9 @@ impl App {
     }
 
     fn cycle_imagepane(&mut self, dir: CycleDirection) {
-        let mut pane_count = 0;
+        let mut pane_count = 0usize;
         Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
-        let delta = match dir {
-            CycleDirection::Forward => 1,
-            CycleDirection::Backward => pane_count - 1,
-        };
-        self.current_imgpane_id += delta as usize;
-        self.current_imgpane_id %= pane_count as usize;
+        cycle_index(&mut self.current_imgpane_id, pane_count, dir);
     }
 
     fn set_img_impl(
@@ -174,7 +169,7 @@ impl App {
         );
     }
 
-    fn get_total_imgpanes(pane: &Pane, counter: &mut u16) {
+    fn get_total_imgpanes(pane: &Pane, counter: &mut usize) {
         match pane {
             Pane::Leaf { .. } => *counter += 1,
             Pane::Split { first, second, .. } => {
@@ -352,9 +347,4 @@ impl App {
             }
         }
     }
-}
-
-pub enum CycleDirection {
-    Forward,
-    Backward,
 }
