@@ -4,6 +4,7 @@ use ratatui::layout::Direction;
 
 use super::{App, CycleDirection};
 use crate::tab::Tab;
+use crate::utils::cycle_index;
 
 impl App {
     pub fn handle_crossterm_events(&mut self) -> Result<()> {
@@ -21,9 +22,17 @@ impl App {
             //
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
+
             //
             (KeyModifiers::NONE, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
-            (KeyModifiers::NONE, KeyCode::Up | KeyCode::Down) => self.handle_updown(key.code),
+            (KeyModifiers::NONE, KeyCode::Up) => {
+                self.current_row_index = self.current_row_index.saturating_sub(1)
+            }
+            (KeyModifiers::NONE, KeyCode::Down) => {
+                self.current_row_index =
+                    (self.current_row_index + 1).min(self.table_rows.len() - 1);
+            }
+
             //
             (KeyModifiers::NONE, KeyCode::Char('n')) => match self.current_tab {
                 Tab::Image => self.cycle_imagepane(CycleDirection::Forward),
@@ -33,6 +42,7 @@ impl App {
                 Tab::Image => self.cycle_imagepane(CycleDirection::Backward),
                 Tab::Data => {}
             },
+
             //
             (KeyModifiers::ALT, KeyCode::Char('v')) => match self.current_tab {
                 Tab::Image => self.split_imgpane(Direction::Horizontal),
@@ -42,6 +52,7 @@ impl App {
                 Tab::Image => self.split_imgpane(Direction::Vertical),
                 Tab::Data => {}
             },
+
             //
             (KeyModifiers::ALT, KeyCode::Left) => match self.current_tab {
                 Tab::Image => self.resize_imgpane(-5, Direction::Horizontal),
@@ -59,11 +70,13 @@ impl App {
                 Tab::Image => self.resize_imgpane(5, Direction::Vertical),
                 Tab::Data => {}
             },
+
             //
             (KeyModifiers::ALT, KeyCode::Char('x')) => match self.current_tab {
                 Tab::Image => self.remove_imgpane(),
                 Tab::Data => {}
             },
+
             //
             (_, KeyCode::Char('d')) => match self.current_tab {
                 Tab::Image => self.next_img(),

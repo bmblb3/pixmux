@@ -80,26 +80,6 @@ impl App {
         self.current_tab = self.current_tab.next();
     }
 
-    pub fn next_row(&mut self) {
-        if self.current_row_index < (self.table_rows.len() - 1) {
-            self.current_row_index += 1;
-        }
-    }
-
-    pub fn prev_row(&mut self) {
-        if self.current_row_index > 0 {
-            self.current_row_index -= 1;
-        }
-    }
-
-    fn handle_updown(&mut self, code: KeyCode) {
-        match code {
-            KeyCode::Down => self.next_row(),
-            KeyCode::Up => self.prev_row(),
-            _ => {}
-        }
-    }
-
     fn cycle_imagepane(&mut self, dir: CycleDirection) {
         let mut pane_count = 0usize;
         Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
