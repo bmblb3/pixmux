@@ -1,3 +1,4 @@
+use color_eyre::eyre;
 use ratatui::layout;
 
 pub enum Pane {
@@ -54,36 +55,43 @@ impl Pane {
         all_paths
     }
 
-    pub fn get_node_at(&self, path: &[bool]) -> &Pane {
+    pub fn get_node_at(&self, path: &[bool]) -> eyre::Result<&Pane> {
         if path.is_empty() {
-            return self;
-        }
-        match self {
-            Pane::Split { first, second, .. } => {
-                let go_first = path[0];
-                if go_first {
-                    first.get_node_at(&path[1..])
-                } else {
-                    second.get_node_at(&path[1..])
+            Ok(self)
+        } else {
+            match self {
+                Pane::Leaf { .. } => Err(eyre::eyre!("Path leads beyond a leaf node")),
+                Pane::Split { first, second, .. } => {
+                    let go_first = path[0];
+                    if go_first {
+                        first.get_node_at(&path[1..])
+                    } else {
+                        second.get_node_at(&path[1..])
+                    }
                 }
             }
-            Pane::Leaf { .. } => self,
         }
     }
 
     pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> bool {
-        match self {
-            Pane::Split { first, second, .. } => {
-                let go_first = path[0];
-                if go_first {
-                    first.split_leaf(&path[1..], direction)
-                } else {
-                    second.split_leaf(&path[1..], direction)
-                }
-            }
-            Pane::Leaf { .. } => {
+        if path.is_empty() {
+            if matches!(self, Pane::Split { .. }) {
+                false // don't split a non-leaf
+            } else {
                 *self = Self::new_split(direction);
                 true
+            }
+        } else {
+            match self {
+                Pane::Leaf { .. } => false, // shouldn't happen
+                Pane::Split { first, second, .. } => {
+                    let go_first = path[0];
+                    if go_first {
+                        first.split_leaf(&path[1..], direction)
+                    } else {
+                        second.split_leaf(&path[1..], direction)
+                    }
+                }
             }
         }
     }
@@ -121,10 +129,16 @@ mod tests {
             let tree = Pane::new_split(direction);
 
             assert!(
-                matches!(tree.get_node_at(&[]), &Pane::Split { direction: d, .. } if d==direction)
+                matches!(tree.get_node_at(&[]).unwrap(), &Pane::Split { direction: d, .. } if d==direction)
             );
-            assert!(matches!(tree.get_node_at(&[true]), &Pane::Leaf { .. }));
-            assert!(matches!(tree.get_node_at(&[false]), &Pane::Leaf { .. }));
+            assert!(matches!(
+                tree.get_node_at(&[true]).unwrap(),
+                &Pane::Leaf { .. }
+            ));
+            assert!(matches!(
+                tree.get_node_at(&[false]).unwrap(),
+                &Pane::Leaf { .. }
+            ));
         }
     }
 
@@ -236,7 +250,7 @@ mod tests {
             let paths = tree.collect_leaf_paths();
             assert_eq!(paths, vec![vec![true], vec![false]]);
             assert!(matches!(
-                tree.get_node_at(&[]),
+                tree.get_node_at(&[]).unwrap(),
                 &Pane::Split {
                     direction: d,
                     ..
@@ -260,12 +274,27 @@ mod tests {
                 vec![vec![true, true], vec![true, false], vec![false]]
             );
             assert!(matches!(
-                tree.get_node_at(&[true]),
+                tree.get_node_at(&[true]).unwrap(),
                 &Pane::Split {
                     direction: d,
                     ..
                 } if d==direction
             ));
         }
+    }
+
+    #[test]
+    fn test_err_splitting_a_split() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        let success = tree.split_leaf(&[], layout::Direction::Horizontal);
+
+        assert!(!success);
+    }
+
+    #[test]
+    fn test_err_getting_an_invalid_node() {
+        let tree = Pane::new_split(layout::Direction::Horizontal);
+        let result = tree.get_node_at(&[true, true]);
+        assert!(result.is_err());
     }
 }
