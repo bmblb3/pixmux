@@ -55,6 +55,24 @@ impl Pane {
         all_paths
     }
 
+    pub fn get_node_at_mut(&mut self, path: &[bool]) -> eyre::Result<&mut Pane> {
+        if path.is_empty() {
+            Ok(self)
+        } else {
+            match self {
+                Pane::Leaf { .. } => Err(eyre::eyre!("Path leads beyond a leaf node")),
+                Pane::Split { first, second, .. } => {
+                    let go_first = path[0];
+                    if go_first {
+                        first.get_node_at_mut(&path[1..])
+                    } else {
+                        second.get_node_at_mut(&path[1..])
+                    }
+                }
+            }
+        }
+    }
+
     pub fn get_node_at(&self, path: &[bool]) -> eyre::Result<&Pane> {
         if path.is_empty() {
             Ok(self)
@@ -74,25 +92,13 @@ impl Pane {
     }
 
     pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> eyre::Result<()> {
-        if path.is_empty() {
-            if matches!(self, Pane::Leaf { .. }) {
-                *self = Self::new_split(direction);
+        let pane = self.get_node_at_mut(path)?;
+        match pane {
+            Pane::Leaf { .. } => {
+                *pane = Self::new_split(direction);
                 Ok(())
-            } else {
-                Err(eyre::eyre!("Can only split a leaf node"))
             }
-        } else {
-            match self {
-                Pane::Leaf { .. } => Err(eyre::eyre!("Path leads beyond a leaf node")),
-                Pane::Split { first, second, .. } => {
-                    let go_first = path[0];
-                    if go_first {
-                        first.split_leaf(&path[1..], direction)
-                    } else {
-                        second.split_leaf(&path[1..], direction)
-                    }
-                }
-            }
+            Pane::Split { .. } => Err(eyre::eyre!("Can only split a leaf node")),
         }
     }
 }
