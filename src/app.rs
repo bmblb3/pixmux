@@ -36,37 +36,6 @@ impl App {
         })
     }
 
-    pub fn get_basename(&self, index: &usize) -> Option<String> {
-        let basenames: Vec<_> = utils::collect_imgfile_basenames(&self.imgdir_paths)
-            .into_iter()
-            .collect();
-        basenames.get(*index).cloned()
-    }
-    pub fn get_imgdir_path(&self, index: &usize) -> &PathBuf {
-        &self.imgdir_paths[*index]
-    }
-
-    pub fn get_fullimgpath(&self, image_index: &usize, row_index: &usize) -> Option<PathBuf> {
-        let basename = self.get_basename(image_index)?;
-        Some(self.get_imgdir_path(row_index).join(basename))
-    }
-
-    pub fn next_tab(&mut self) {
-        self.current_tab = self.current_tab.next();
-    }
-
-    pub fn next_row(&mut self) {
-        if self.current_row_index < (self.table_rows.len() - 1) {
-            self.current_row_index += 1;
-        }
-    }
-
-    pub fn prev_row(&mut self) {
-        if self.current_row_index > 0 {
-            self.current_row_index -= 1;
-        }
-    }
-
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
         while self.running {
@@ -94,6 +63,38 @@ impl App {
             _ => {}
         }
         Ok(())
+    }
+
+    pub fn get_basename(&self, index: &usize) -> Option<String> {
+        let basenames: Vec<_> = utils::collect_imgfile_basenames(&self.imgdir_paths)
+            .into_iter()
+            .collect();
+        basenames.get(*index).cloned()
+    }
+
+    pub fn get_imgdir_path(&self, index: &usize) -> &PathBuf {
+        &self.imgdir_paths[*index]
+    }
+
+    pub fn get_fullimgpath(&self, image_index: &usize, row_index: &usize) -> Option<PathBuf> {
+        let basename = self.get_basename(image_index)?;
+        Some(self.get_imgdir_path(row_index).join(basename))
+    }
+
+    pub fn next_tab(&mut self) {
+        self.current_tab = self.current_tab.next();
+    }
+
+    pub fn next_row(&mut self) {
+        if self.current_row_index < (self.table_rows.len() - 1) {
+            self.current_row_index += 1;
+        }
+    }
+
+    pub fn prev_row(&mut self) {
+        if self.current_row_index > 0 {
+            self.current_row_index -= 1;
+        }
     }
 
     fn on_key_event(&mut self, key: KeyEvent) {
