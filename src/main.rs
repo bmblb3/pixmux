@@ -6,7 +6,6 @@ mod app;
 mod data_table;
 mod image_layout;
 mod tab;
-mod utils;
 
 use app::App;
 

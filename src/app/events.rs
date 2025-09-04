@@ -2,9 +2,8 @@ use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::layout::Direction;
 
-use super::{App, CycleDirection};
+use super::App;
 use crate::tab::Tab;
-use crate::utils::step_index;
 
 impl App {
     pub fn handle_crossterm_events(&mut self) -> Result<()> {
@@ -26,27 +25,27 @@ impl App {
             //
             (KeyModifiers::NONE, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
             (KeyModifiers::NONE, KeyCode::Up) => {
-                self.current_row_index = step_index(
+                self.current_row_index = pixmux::step_index(
                     self.current_row_index,
                     self.table_rows.len(),
-                    crate::utils::StepDirection::Backward,
+                    pixmux::AdjustDirection::Backward,
                 )
             }
             (KeyModifiers::NONE, KeyCode::Down) => {
-                self.current_row_index = step_index(
+                self.current_row_index = pixmux::step_index(
                     self.current_row_index,
                     self.table_rows.len(),
-                    crate::utils::StepDirection::Forward,
+                    pixmux::AdjustDirection::Forward,
                 )
             }
 
             //
             (KeyModifiers::NONE, KeyCode::Char('n')) => match self.current_tab {
-                Tab::Image => self.cycle_imagepane(CycleDirection::Forward),
+                Tab::Image => self.cycle_imagepane(pixmux::AdjustDirection::Forward),
                 Tab::Data => {}
             },
             (KeyModifiers::SHIFT, KeyCode::Char('N')) => match self.current_tab {
-                Tab::Image => self.cycle_imagepane(CycleDirection::Backward),
+                Tab::Image => self.cycle_imagepane(pixmux::AdjustDirection::Backward),
                 Tab::Data => {}
             },
 

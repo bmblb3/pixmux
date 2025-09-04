@@ -6,7 +6,6 @@ use ratatui::{DefaultTerminal, Frame};
 
 use crate::app::imgpane::Pane;
 use crate::tab::Tab;
-use crate::utils::{CycleDirection, cycle_index};
 
 mod events;
 pub mod imgpane;
@@ -80,10 +79,10 @@ impl App {
         self.current_tab = self.current_tab.next();
     }
 
-    fn cycle_imagepane(&mut self, dir: CycleDirection) {
+    fn cycle_imagepane(&mut self, dir: pixmux::AdjustDirection) {
         let mut pane_count = 0usize;
         Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
-        self.current_imgpane_id = cycle_index(self.current_imgpane_id, pane_count, dir);
+        self.current_imgpane_id = pixmux::cycle_index(self.current_imgpane_id, pane_count, dir);
     }
 
     fn set_img_impl(
@@ -91,7 +90,7 @@ impl App {
         target_imgpane_id: &usize,
         candidate_imgpane_id: &mut usize,
         nr_images: &usize,
-        cycle_direction: &CycleDirection,
+        cycle_direction: &pixmux::AdjustDirection,
     ) -> bool {
         match pane {
             Pane::Split { first, second, .. } => {
@@ -123,11 +122,11 @@ impl App {
                     return false;
                 }
                 match cycle_direction {
-                    CycleDirection::Forward => {
+                    pixmux::AdjustDirection::Forward => {
                         *image_id += 1;
                         *image_id %= nr_images;
                     }
-                    CycleDirection::Backward => {
+                    pixmux::AdjustDirection::Backward => {
                         *image_id += nr_images - 1;
                         *image_id %= nr_images;
                     }
@@ -145,7 +144,7 @@ impl App {
             &self.current_imgpane_id,
             &mut candidate_imgpane_id,
             &nr_images,
-            &CycleDirection::Forward,
+            &pixmux::AdjustDirection::Forward,
         );
     }
 }
