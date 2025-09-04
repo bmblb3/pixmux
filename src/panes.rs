@@ -89,13 +89,11 @@ mod tests {
 
     #[test]
     fn test_a1a2b_split_get_leaves() {
-        let split1 = Pane::new_split(layout::Direction::Horizontal);
-        let leaf = Pane::new_leaf();
         let tree = Pane::Split {
             direction: layout::Direction::Vertical,
             pct: 50,
-            first: Box::new(split1),
-            second: Box::new(leaf),
+            first: Box::new(Pane::new_split(layout::Direction::Horizontal)),
+            second: Box::new(Pane::new_leaf()),
         };
 
         let paths = tree.collect_leaf_paths();
@@ -108,13 +106,11 @@ mod tests {
 
     #[test]
     fn test_ab1b2_split_get_leaves() {
-        let split1 = Pane::new_split(layout::Direction::Horizontal);
-        let leaf = Pane::new_leaf();
         let tree = Pane::Split {
             direction: layout::Direction::Vertical,
             pct: 50,
-            first: Box::new(leaf),
-            second: Box::new(split1),
+            first: Box::new(Pane::new_leaf()),
+            second: Box::new(Pane::new_split(layout::Direction::Horizontal)),
         };
 
         let paths = tree.collect_leaf_paths();
@@ -126,30 +122,55 @@ mod tests {
     }
 
     #[test]
-    fn test_deep_nesting_path() {
-        let inner_split = Pane::new_split(layout::Direction::Horizontal);
-        let middle_split = Pane::Split {
-            direction: layout::Direction::Vertical,
-            pct: 50,
-            first: Box::new(Pane::new_leaf()),
-            second: Box::new(inner_split),
-        };
-        let outer_split = Pane::Split {
+    fn test_deep_nesting_path_first_heavy() {
+        let tree = Pane::Split {
             direction: layout::Direction::Horizontal,
             pct: 50,
-            first: Box::new(middle_split),
+            first: Box::new(Pane::Split {
+                direction: layout::Direction::Vertical,
+                pct: 50,
+                first: Box::new(Pane::new_split(layout::Direction::Horizontal)),
+                second: Box::new(Pane::new_leaf()),
+            }),
             second: Box::new(Pane::new_leaf()),
         };
 
-        let paths = outer_split.collect_leaf_paths();
+        let paths = tree.collect_leaf_paths();
 
         assert_eq!(
             paths,
             vec![
-                vec![true, true],
-                vec![true, false, true],
-                vec![true, false, false],
+                vec![true, true, true],
+                vec![true, true, false],
+                vec![true, false],
                 vec![false]
+            ]
+        );
+    }
+
+    #[test]
+    fn test_deep_nesting_path_second_heavy() {
+        let tree = Pane::Split {
+            direction: layout::Direction::Horizontal,
+            pct: 50,
+            first: Box::new(Pane::new_leaf()),
+            second: Box::new(Pane::Split {
+                direction: layout::Direction::Vertical,
+                pct: 50,
+                first: Box::new(Pane::new_leaf()),
+                second: Box::new(Pane::new_split(layout::Direction::Horizontal)),
+            }),
+        };
+
+        let paths = tree.collect_leaf_paths();
+
+        assert_eq!(
+            paths,
+            vec![
+                vec![true],
+                vec![false, true],
+                vec![false, false, true],
+                vec![false, false, false]
             ]
         );
     }
