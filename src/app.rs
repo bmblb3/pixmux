@@ -62,10 +62,9 @@ impl App {
     }
 
     pub fn get_basename(&self, index: &usize) -> Option<String> {
-        let basenames: Vec<_> = utils::collect_imgfile_basenames(&self.imgdir_paths)
-            .into_iter()
-            .collect();
-        basenames.get(*index).cloned()
+        utils::collect_imgfile_basenames(&self.imgdir_paths)
+            .get(*index)
+            .cloned()
     }
 
     pub fn get_imgdir_path(&self, index: &usize) -> &PathBuf {
