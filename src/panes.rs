@@ -276,6 +276,13 @@ mod tests {
     }
 
     #[test]
+    fn test_err_getting_a_path_beyond_a_leaf() {
+        let tree = Pane::new_split(layout::Direction::Horizontal);
+        let result = tree.get_node_at(&[true, true]);
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_err_splitting_a_split() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
         let result = tree.split_leaf(&[], layout::Direction::Horizontal);
@@ -283,9 +290,9 @@ mod tests {
     }
 
     #[test]
-    fn test_err_getting_a_path_beyond_a_leaf() {
-        let tree = Pane::new_split(layout::Direction::Horizontal);
-        let result = tree.get_node_at(&[true, true]);
+    fn test_err_splitting_a_path_beyond_a_leaf() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        let result = tree.split_leaf(&[true, true], layout::Direction::Horizontal);
         assert!(result.is_err());
     }
 }
