@@ -1,8 +1,6 @@
 use std::path;
 
-pub fn collect_imgfile_basenames(
-    imgdir_paths: &Vec<path::PathBuf>,
-) -> std::collections::BTreeSet<String> {
+pub fn collect_imgfile_basenames(imgdir_paths: &Vec<path::PathBuf>) -> Vec<String> {
     let mut basenames = std::collections::BTreeSet::new();
     let image_extensions = ["jpg", "jpeg", "png", "bmp", "tiff", "webp"];
 
@@ -22,7 +20,7 @@ pub fn collect_imgfile_basenames(
             }
         }
     }
-    basenames
+    basenames.into_iter().collect()
 }
 
 #[cfg(test)]
@@ -43,9 +41,9 @@ mod tests {
         let result = collect_imgfile_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 2);
-        assert!(result.contains("image1.jpg"));
-        assert!(result.contains("image2.PNG"));
-        assert!(!result.contains("not_an_image.txt"));
+        assert!(result.contains(&"image1.jpg".to_string()));
+        assert!(result.contains(&"image2.PNG".to_string()));
+        assert!(!result.contains(&"not_an_image.txt".to_string()));
     }
 
     #[test]
@@ -75,8 +73,8 @@ mod tests {
         let result = collect_imgfile_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 2);
-        assert!(result.contains("image1.jpg"));
-        assert!(result.contains("image2.jpg"));
+        assert!(result.contains(&"image1.jpg".to_string()));
+        assert!(result.contains(&"image2.jpg".to_string()));
     }
 
     #[test]
@@ -93,8 +91,8 @@ mod tests {
         let result = collect_imgfile_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 2);
-        assert!(result.contains("image1.jpg"));
-        assert!(result.contains("image1.png"));
+        assert!(result.contains(&"image1.jpg".to_string()));
+        assert!(result.contains(&"image1.png".to_string()));
     }
 
     #[test]
@@ -111,8 +109,8 @@ mod tests {
         let result = collect_imgfile_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 1);
-        assert!(result.contains("image1.jpg"));
-        assert!(result.contains("image1.jpg"));
+        assert!(result.contains(&"image1.jpg".to_string()));
+        assert!(result.contains(&"image1.jpg".to_string()));
     }
 
     #[test]
