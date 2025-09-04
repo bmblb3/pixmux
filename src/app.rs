@@ -1,7 +1,6 @@
 use std::path::{self, PathBuf};
 
 use color_eyre::Result;
-use crossterm::event::KeyCode;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 

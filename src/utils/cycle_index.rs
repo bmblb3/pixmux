@@ -39,7 +39,7 @@ mod tests {
         let dirs = [CycleDirection::Forward, CycleDirection::Backward];
 
         for dir in dirs {
-            assert_eq!(cycle_index(0, 1, CycleDirection::Backward), 0);
+            assert_eq!(cycle_index(0, 1, dir), 0);
         }
     }
 }

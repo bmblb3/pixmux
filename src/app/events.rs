@@ -4,7 +4,7 @@ use ratatui::layout::Direction;
 
 use super::{App, CycleDirection};
 use crate::tab::Tab;
-use crate::utils::cycle_index;
+use crate::utils::step_index;
 
 impl App {
     pub fn handle_crossterm_events(&mut self) -> Result<()> {
@@ -26,11 +26,18 @@ impl App {
             //
             (KeyModifiers::NONE, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
             (KeyModifiers::NONE, KeyCode::Up) => {
-                self.current_row_index = self.current_row_index.saturating_sub(1)
+                self.current_row_index = step_index(
+                    self.current_row_index,
+                    self.table_rows.len(),
+                    crate::utils::StepDirection::Backward,
+                )
             }
             (KeyModifiers::NONE, KeyCode::Down) => {
-                self.current_row_index =
-                    (self.current_row_index + 1).min(self.table_rows.len() - 1);
+                self.current_row_index = step_index(
+                    self.current_row_index,
+                    self.table_rows.len(),
+                    crate::utils::StepDirection::Forward,
+                )
             }
 
             //
