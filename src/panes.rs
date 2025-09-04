@@ -330,9 +330,35 @@ mod tests {
     // Remove nodes
     #[test]
     fn test_splitting_a_simple_leaf_node() {
-        let mut tree = Pane::new_split(layout::Direction::Horizontal);
-        tree.remove_node_at(&[true]).unwrap();
+        let test_cases = [(true, 2), (false, 1)];
 
-        assert!(matches!(tree, Pane::Leaf { .. }));
+        for test_case in test_cases {
+            let (remove_child, expected) = test_case;
+
+            let mut tree = Pane::Split {
+                direction: layout::Direction::Vertical,
+                pct: 50,
+                first: Box::new(Pane::Leaf { image_id: 1 }),
+                second: Box::new(Pane::Leaf { image_id: 2 }),
+            };
+            tree.remove_node_at(&[remove_child]).unwrap();
+
+            assert!(matches!(tree, Pane::Leaf { image_id: e } if e==expected));
+        }
+    }
+
+    #[test]
+    fn test_remove_leaf_nested() {
+        let mut tree = Pane::Split {
+            direction: layout::Direction::Vertical,
+            pct: 50,
+            first: Box::new(Pane::new_split(layout::Direction::Horizontal)),
+            second: Box::new(Pane::new_leaf()),
+        };
+
+        tree.remove_node_at(&[true, false]).unwrap();
+        let paths = tree.collect_leaf_paths();
+
+        assert_eq!(paths, vec![vec![true], vec![false]]);
     }
 }
