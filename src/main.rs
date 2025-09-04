@@ -1,6 +1,5 @@
 #![warn(clippy::used_underscore_binding)]
-use std::{env, path};
-
+use clap::Parser as _;
 use color_eyre::Result;
 
 mod app;
@@ -11,17 +10,20 @@ mod utils;
 
 use app::App;
 
+#[derive(clap::Parser)]
+#[command(about = "A tui-app for viewing images associated with tabular data")]
+pub struct Args {
+    #[arg(help = "Path to .csv file", value_hint = clap::ValueHint::FilePath)]
+    pub file: String,
+}
+
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Usage: {} <csv_file>", args[0]);
-        std::process::exit(1);
-    }
+    let args = Args::parse();
 
     let terminal = ratatui::init();
-    let result = App::new(path::PathBuf::from(&args[1]))?.run(terminal);
+    let result = App::new(args.file.into())?.run(terminal);
     ratatui::restore();
     result
 }
