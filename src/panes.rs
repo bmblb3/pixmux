@@ -55,8 +55,20 @@ impl Pane {
     }
 
     pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> bool {
-        *self = Self::new_split(direction);
-        true
+        match self {
+            Pane::Split { first, second, .. } => {
+                let go_first = path[0];
+                if go_first {
+                    first.split_leaf(&path[1..], direction)
+                } else {
+                    second.split_leaf(&path[1..], direction)
+                }
+            }
+            Pane::Leaf { .. } => {
+                *self = Self::new_split(direction);
+                true
+            }
+        }
     }
 }
 
@@ -188,5 +200,18 @@ mod tests {
         assert!(success);
         let paths = tree.collect_leaf_paths();
         assert_eq!(paths, vec![vec![true], vec![false]]);
+    }
+
+    #[test]
+    fn test_split_leaf_nested() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        let success = tree.split_leaf(&[true], layout::Direction::Vertical);
+
+        assert!(success);
+        let paths = tree.collect_leaf_paths();
+        assert_eq!(
+            paths,
+            vec![vec![true, true], vec![true, false], vec![false]]
+        );
     }
 }
