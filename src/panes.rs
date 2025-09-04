@@ -13,6 +13,22 @@ pub enum Pane {
     },
 }
 
+macro_rules! impl_get_node_at {
+    ($self:ident, $path:ident, $method:ident) => {
+        if $path.is_empty() {
+            Ok($self)
+        } else {
+            match $self {
+                Pane::Leaf { .. } => Err(eyre::eyre!("Path leads beyond a leaf node")),
+                Pane::Split { first, second, .. } => {
+                    let child = if $path[0] { first } else { second };
+                    child.$method(&$path[1..])
+                }
+            }
+        }
+    };
+}
+
 impl Pane {
     pub fn new_leaf() -> Self {
         Pane::Leaf { image_id: 0 }
@@ -56,39 +72,11 @@ impl Pane {
     }
 
     pub fn get_node_at_mut(&mut self, path: &[bool]) -> eyre::Result<&mut Pane> {
-        if path.is_empty() {
-            Ok(self)
-        } else {
-            match self {
-                Pane::Leaf { .. } => Err(eyre::eyre!("Path leads beyond a leaf node")),
-                Pane::Split { first, second, .. } => {
-                    let go_first = path[0];
-                    if go_first {
-                        first.get_node_at_mut(&path[1..])
-                    } else {
-                        second.get_node_at_mut(&path[1..])
-                    }
-                }
-            }
-        }
+        impl_get_node_at!(self, path, get_node_at_mut)
     }
 
     pub fn get_node_at(&self, path: &[bool]) -> eyre::Result<&Pane> {
-        if path.is_empty() {
-            Ok(self)
-        } else {
-            match self {
-                Pane::Leaf { .. } => Err(eyre::eyre!("Path leads beyond a leaf node")),
-                Pane::Split { first, second, .. } => {
-                    let go_first = path[0];
-                    if go_first {
-                        first.get_node_at(&path[1..])
-                    } else {
-                        second.get_node_at(&path[1..])
-                    }
-                }
-            }
-        }
+        impl_get_node_at!(self, path, get_node_at)
     }
 
     pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> eyre::Result<()> {
