@@ -36,31 +36,10 @@ impl App {
         })
     }
 
-    pub fn collect_image_basenames(&self) -> std::collections::BTreeSet<String> {
-        let mut basenames = std::collections::BTreeSet::new();
-        let image_extensions = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp"];
-
-        for dir_path in &self.imgdir_paths {
-            if let Ok(entries) = std::fs::read_dir(dir_path) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.is_file()
-                        && let Some(ext) = path.extension()
-                        && let Some(ext_str) = ext.to_str()
-                        && image_extensions.contains(&ext_str.to_lowercase().as_str())
-                        && let Some(basename) = path.file_name()
-                        && let Some(basename_str) = basename.to_str()
-                    {
-                        basenames.insert(basename_str.to_string());
-                    }
-                }
-            }
-        }
-        basenames
-    }
-
     pub fn get_basename(&self, index: &usize) -> Option<String> {
-        let basenames: Vec<_> = self.collect_image_basenames().into_iter().collect();
+        let basenames: Vec<_> = utils::collect_imgfile_basenames(&self.imgdir_paths)
+            .into_iter()
+            .collect();
         basenames.get(*index).cloned()
     }
     pub fn get_imgdir_path(&self, index: &usize) -> &PathBuf {
@@ -250,7 +229,7 @@ impl App {
 
     fn next_img(&mut self) {
         let mut candidate_imgpane_id = 0;
-        let nr_images = self.collect_image_basenames().into_iter().len();
+        let nr_images = utils::collect_imgfile_basenames(&self.imgdir_paths).len();
         Self::set_img_impl(
             &mut self.root_imgpane,
             &self.current_imgpane_id,
