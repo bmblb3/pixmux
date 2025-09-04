@@ -95,6 +95,7 @@ impl Pane {
 mod tests {
     use super::*;
 
+    // Test creating fresh nodes
     #[test]
     fn test_new_leaf() {
         let tree = Pane::new_leaf();
@@ -136,8 +137,9 @@ mod tests {
         }
     }
 
+    // Test for leaves collection
     #[test]
-    fn test_new_split_get_leaves() {
+    fn test_new_split_collect_leaves() {
         let tree = Pane::new_split(layout::Direction::Horizontal);
         let paths = tree.collect_leaf_paths();
 
@@ -145,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn test_a1a2b_split_get_leaves() {
+    fn test_a1a2b_split_collect_leaves() {
         let tree = Pane::Split {
             direction: layout::Direction::Vertical,
             pct: 50,
@@ -162,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ab1b2_split_get_leaves() {
+    fn test_ab1b2_split_collect_leaves() {
         let tree = Pane::Split {
             direction: layout::Direction::Vertical,
             pct: 50,
@@ -179,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deep_nesting_path_first_heavy() {
+    fn test_deep_nesting_path_first_heavy_collect_leaves() {
         let tree = Pane::Split {
             direction: layout::Direction::Horizontal,
             pct: 50,
@@ -206,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deep_nesting_path_second_heavy() {
+    fn test_deep_nesting_path_second_heavy_collect_leaves() {
         let tree = Pane::Split {
             direction: layout::Direction::Horizontal,
             pct: 50,
@@ -232,8 +234,9 @@ mod tests {
         );
     }
 
+    // Test for some valid splits
     #[test]
-    fn test_split_leaf_root() {
+    fn test_split_root_leaf() {
         let directions = vec![layout::Direction::Horizontal, layout::Direction::Vertical];
 
         for direction in directions {
@@ -275,6 +278,8 @@ mod tests {
         }
     }
 
+    // Getting a node from a path can fail if the path is "invalid"
+    //   i.e the path charts a route BEYOND a leaf
     #[test]
     fn test_err_getting_a_path_beyond_a_leaf() {
         let tree = Pane::new_split(layout::Direction::Horizontal);
@@ -282,6 +287,7 @@ mod tests {
         assert!(result.is_err());
     }
 
+    // Splits can fail for two reasons
     #[test]
     fn test_err_splitting_a_split() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
