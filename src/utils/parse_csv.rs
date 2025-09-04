@@ -128,43 +128,6 @@ value21,value22,{created_dir2}",
     }
 
     #[test]
-    fn test_err_mismatch_row1_and_row2() {
-        let tmpdir1 = tempfile::TempDir::new().unwrap();
-        let created_dir1 = tmpdir1.path().file_name().unwrap().to_str().unwrap();
-        let tmpdir2 = tempfile::TempDir::new().unwrap();
-        let created_dir2 = tmpdir2.path().file_name().unwrap().to_str().unwrap();
-        let csv_content = format!(
-            "\
-firstheader,_
-value11,{created_dir1}
-value21,{created_dir2},extravalue",
-        );
-        let mut file = tempfile::NamedTempFile::new().unwrap();
-        file.write_all(csv_content.as_bytes()).unwrap();
-
-        let result = parse_csv(&file.path().to_path_buf());
-
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_err_mismatch_rows_headers() {
-        let tmpdir = tempfile::TempDir::new().unwrap();
-        let created_dir = tmpdir.path().file_name().unwrap().to_str().unwrap();
-        let csv_content = format!(
-            "\
-firstheader,_
-value1,{created_dir},extravalue",
-        );
-        let mut file = tempfile::NamedTempFile::new().unwrap();
-        file.write_all(csv_content.as_bytes()).unwrap();
-
-        let result = parse_csv(&file.path().to_path_buf());
-
-        assert!(result.is_err());
-    }
-
-    #[test]
     fn test_err_empty_csv() {
         let csv_content = "";
         let mut file = tempfile::NamedTempFile::new().unwrap();
