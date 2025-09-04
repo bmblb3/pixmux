@@ -1,52 +1,12 @@
 use ratatui::Frame;
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::Color;
 use ratatui::widgets::{Block, BorderType};
 use ratatui_image::StatefulImage;
 use ratatui_image::picker::Picker;
 
 use crate::app::App;
-
-#[allow(dead_code)]
-pub enum ChildPanePosition {
-    LeftOrTop,
-    RightOrBottom,
-}
-
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub enum Pane {
-    Leaf {
-        image_id: usize,
-    },
-    Split {
-        direction: Direction,
-        pct: u8,
-        first: Box<Pane>,
-        second: Box<Pane>,
-    },
-}
-
-impl Default for Pane {
-    fn default() -> Self {
-        Self::Leaf { image_id: 0 }
-    }
-}
-
-impl Pane {
-    pub fn leaf() -> Self {
-        Self::Leaf { image_id: 0 }
-    }
-
-    pub fn split(direction: Direction) -> Self {
-        Self::Split {
-            direction,
-            pct: 50,
-            first: Box::new(Pane::leaf()),
-            second: Box::new(Pane::leaf()),
-        }
-    }
-}
+use crate::app::imgpane::Pane;
 
 #[derive(Default)]
 pub struct ImageLayout;
