@@ -73,17 +73,17 @@ impl Pane {
         }
     }
 
-    pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> bool {
+    pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> eyre::Result<()> {
         if path.is_empty() {
-            if matches!(self, Pane::Split { .. }) {
-                false // don't split a non-leaf
-            } else {
+            if matches!(self, Pane::Leaf { .. }) {
                 *self = Self::new_split(direction);
-                true
+                Ok(())
+            } else {
+                Err(eyre::eyre!("Can only split a leaf node"))
             }
         } else {
             match self {
-                Pane::Leaf { .. } => false, // shouldn't happen
+                Pane::Leaf { .. } => Err(eyre::eyre!("Path leads beyond a leaf node")),
                 Pane::Split { first, second, .. } => {
                     let go_first = path[0];
                     if go_first {
@@ -244,9 +244,8 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_leaf();
-            let success = tree.split_leaf(&[], direction);
+            tree.split_leaf(&[], direction).unwrap();
 
-            assert!(success);
             let paths = tree.collect_leaf_paths();
             assert_eq!(paths, vec![vec![true], vec![false]]);
             assert!(matches!(
@@ -265,9 +264,8 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_split(layout::Direction::Horizontal);
-            let success = tree.split_leaf(&[true], direction);
+            tree.split_leaf(&[true], direction).unwrap();
 
-            assert!(success);
             let paths = tree.collect_leaf_paths();
             assert_eq!(
                 paths,
@@ -286,13 +284,12 @@ mod tests {
     #[test]
     fn test_err_splitting_a_split() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
-        let success = tree.split_leaf(&[], layout::Direction::Horizontal);
-
-        assert!(!success);
+        let result = tree.split_leaf(&[], layout::Direction::Horizontal);
+        assert!(result.is_err());
     }
 
     #[test]
-    fn test_err_getting_an_invalid_node() {
+    fn test_err_getting_a_path_beyond_a_leaf() {
         let tree = Pane::new_split(layout::Direction::Horizontal);
         let result = tree.get_node_at(&[true, true]);
         assert!(result.is_err());
