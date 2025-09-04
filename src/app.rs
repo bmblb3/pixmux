@@ -103,7 +103,7 @@ impl App {
     fn cycle_imagepane(&mut self, dir: CycleDirection) {
         let mut pane_count = 0usize;
         Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
-        cycle_index(&mut self.current_imgpane_id, pane_count, dir);
+        self.current_imgpane_id = cycle_index(self.current_imgpane_id, pane_count, dir);
     }
 
     fn set_img_impl(
