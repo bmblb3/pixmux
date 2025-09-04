@@ -1,6 +1,7 @@
-use color_eyre::eyre;
+use color_eyre::eyre::{self, Ok, OptionExt as _};
 use ratatui::layout;
 
+#[derive(Clone)]
 pub enum Pane {
     Leaf {
         image_id: usize,
@@ -88,6 +89,30 @@ impl Pane {
             }
             Pane::Split { .. } => Err(eyre::eyre!("Can only split a leaf node")),
         }
+    }
+
+    pub fn remove_node_at(&mut self, path: &[bool]) -> eyre::Result<()> {
+        let mut parent_path = path.to_vec();
+        let is_first_child = parent_path
+            .pop()
+            .ok_or_eyre(eyre::eyre!("Cannot split the root"))?;
+        let parent = self.get_node_at_mut(&parent_path)?;
+
+        let sibling = match parent {
+            Pane::Leaf { .. } => {
+                return Err(eyre::eyre!("Parent does not seem to be a split node!"));
+            }
+            Pane::Split { first, second, .. } => {
+                if is_first_child {
+                    second
+                } else {
+                    first
+                }
+            }
+        };
+
+        *parent = (**sibling).clone();
+        Ok(())
     }
 }
 
@@ -300,5 +325,14 @@ mod tests {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
         let result = tree.split_leaf(&[true, true], layout::Direction::Horizontal);
         assert!(result.is_err());
+    }
+
+    // Remove nodes
+    #[test]
+    fn test_splitting_a_simple_leaf_node() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        tree.remove_node_at(&[true]).unwrap();
+
+        assert!(matches!(tree, Pane::Leaf { .. }));
     }
 }
