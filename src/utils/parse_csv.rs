@@ -16,12 +16,6 @@ pub fn parse_csv(filepath: &path::PathBuf) -> Result<CsvData> {
 
     headers
         .iter()
-        .any(|h| h == "_")
-        .then_some(())
-        .ok_or_eyre("Headers must contain underscore")?;
-
-    headers
-        .iter()
         .any(|h| h != "_")
         .then_some(())
         .ok_or_eyre("Headers must contain atleast one non-underscore column (for data)")?;
@@ -32,7 +26,11 @@ pub fn parse_csv(filepath: &path::PathBuf) -> Result<CsvData> {
         .map(|str_record| Ok(str_record.iter().map(|val| val.to_string()).collect()))
         .collect::<Result<Vec<Vec<String>>, csv::Error>>()?;
 
-    let underscore_index = headers.iter().position(|h| h == "_").unwrap();
+    let underscore_index = headers
+        .iter()
+        .position(|h| h == "_")
+        .ok_or_eyre("Missing \"_\" column")?;
+
     let headers: Vec<String> = headers
         .iter()
         .enumerate()
