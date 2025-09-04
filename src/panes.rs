@@ -54,6 +54,23 @@ impl Pane {
         all_paths
     }
 
+    pub fn get_node_at(&self, path: &[bool]) -> &Pane {
+        if path.is_empty() {
+            return self;
+        }
+        match self {
+            Pane::Split { first, second, .. } => {
+                let go_first = path[0];
+                if go_first {
+                    first.get_node_at(&path[1..])
+                } else {
+                    second.get_node_at(&path[1..])
+                }
+            }
+            Pane::Leaf { .. } => self,
+        }
+    }
+
     pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> bool {
         match self {
             Pane::Split { first, second, .. } => {
@@ -94,6 +111,21 @@ mod tests {
                 ..
             }
         ));
+    }
+
+    #[test]
+    fn test_split_directions() {
+        let directions = vec![layout::Direction::Horizontal, layout::Direction::Vertical];
+
+        for direction in directions {
+            let tree = Pane::new_split(direction);
+
+            assert!(
+                matches!(tree.get_node_at(&[]), &Pane::Split { direction: d, .. } if d==direction)
+            );
+            assert!(matches!(tree.get_node_at(&[true]), &Pane::Leaf { .. }));
+            assert!(matches!(tree.get_node_at(&[false]), &Pane::Leaf { .. }));
+        }
     }
 
     #[test]
@@ -194,24 +226,46 @@ mod tests {
 
     #[test]
     fn test_split_leaf_root() {
-        let mut tree = Pane::new_leaf();
-        let success = tree.split_leaf(&[], layout::Direction::Horizontal);
+        let directions = vec![layout::Direction::Horizontal, layout::Direction::Vertical];
 
-        assert!(success);
-        let paths = tree.collect_leaf_paths();
-        assert_eq!(paths, vec![vec![true], vec![false]]);
+        for direction in directions {
+            let mut tree = Pane::new_leaf();
+            let success = tree.split_leaf(&[], direction);
+
+            assert!(success);
+            let paths = tree.collect_leaf_paths();
+            assert_eq!(paths, vec![vec![true], vec![false]]);
+            assert!(matches!(
+                tree.get_node_at(&[]),
+                &Pane::Split {
+                    direction: d,
+                    ..
+                } if d==direction
+            ));
+        }
     }
 
     #[test]
     fn test_split_leaf_nested() {
-        let mut tree = Pane::new_split(layout::Direction::Horizontal);
-        let success = tree.split_leaf(&[true], layout::Direction::Vertical);
+        let directions = vec![layout::Direction::Horizontal, layout::Direction::Vertical];
 
-        assert!(success);
-        let paths = tree.collect_leaf_paths();
-        assert_eq!(
-            paths,
-            vec![vec![true, true], vec![true, false], vec![false]]
-        );
+        for direction in directions {
+            let mut tree = Pane::new_split(layout::Direction::Horizontal);
+            let success = tree.split_leaf(&[true], direction);
+
+            assert!(success);
+            let paths = tree.collect_leaf_paths();
+            assert_eq!(
+                paths,
+                vec![vec![true, true], vec![true, false], vec![false]]
+            );
+            assert!(matches!(
+                tree.get_node_at(&[true]),
+                &Pane::Split {
+                    direction: d,
+                    ..
+                } if d==direction
+            ));
+        }
     }
 }
