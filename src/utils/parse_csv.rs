@@ -14,12 +14,6 @@ pub fn parse_csv(filepath: &path::PathBuf) -> Result<CsvData> {
 
     let headers: Vec<String> = rdr.headers()?.iter().map(|f| f.to_string()).collect();
 
-    headers
-        .iter()
-        .any(|h| h != "_")
-        .then_some(())
-        .ok_or_eyre("Headers must contain atleast one non-underscore column (for data)")?;
-
     let records: Vec<csv::StringRecord> = rdr.records().collect::<Result<_, _>>()?;
     let rows: Vec<Vec<String>> = records
         .iter()
@@ -37,6 +31,11 @@ pub fn parse_csv(filepath: &path::PathBuf) -> Result<CsvData> {
         .filter(|(i, _)| *i != underscore_index)
         .map(|(_, h)| h.to_string())
         .collect();
+    headers
+        .len()
+        .gt(&0)
+        .then_some(())
+        .ok_or_eyre("Missing data columns")?;
 
     let row_dirs: Vec<path::PathBuf> = rows
         .iter()
