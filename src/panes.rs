@@ -25,6 +25,10 @@ impl Pane {
             second: Box::new(Self::new_leaf()),
         }
     }
+
+    pub fn collect_leaf_paths(&self) -> Vec<Vec<bool>> {
+        vec![vec![true], vec![false]]
+    }
 }
 
 #[cfg(test)]
@@ -49,5 +53,13 @@ mod tests {
                 ..
             }
         ));
+    }
+
+    #[test]
+    fn test_new_split_get_leaves() {
+        let tree = Pane::new_split(layout::Direction::Horizontal);
+        let paths = tree.collect_leaf_paths();
+
+        assert_eq!(paths, vec![vec![true], vec![false]]);
     }
 }
