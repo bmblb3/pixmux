@@ -62,7 +62,7 @@ impl App {
     }
 
     pub fn get_basename(&self, index: &usize) -> Option<String> {
-        utils::collect_imgfile_basenames(&self.imgdir_paths)
+        pixmux::collect_imgfile_basenames(&self.imgdir_paths)
             .get(*index)
             .cloned()
     }
@@ -139,7 +139,7 @@ impl App {
 
     fn next_img(&mut self) {
         let mut candidate_imgpane_id = 0;
-        let nr_images = utils::collect_imgfile_basenames(&self.imgdir_paths).len();
+        let nr_images = pixmux::collect_imgfile_basenames(&self.imgdir_paths).len();
         Self::set_img_impl(
             &mut self.root_imgpane,
             &self.current_imgpane_id,
