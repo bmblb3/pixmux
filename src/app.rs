@@ -47,6 +47,10 @@ impl App {
         Ok(())
     }
 
+    fn quit(&mut self) {
+        self.running = false;
+    }
+
     fn render(&mut self, frame: &mut Frame) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -95,10 +99,6 @@ impl App {
             KeyCode::Up => self.prev_row(),
             _ => {}
         }
-    }
-
-    fn quit(&mut self) {
-        self.running = false;
     }
 
     fn cycle_imagepane(&mut self, dir: CycleDirection) {
