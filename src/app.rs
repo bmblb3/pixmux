@@ -6,7 +6,7 @@ use ratatui::{DefaultTerminal, Frame};
 
 use crate::app::imgpane::Pane;
 use crate::tab::Tab;
-use crate::utils::{self, CycleDirection, cycle_index};
+use crate::utils::{CycleDirection, cycle_index};
 
 mod events;
 pub mod imgpane;
@@ -25,7 +25,7 @@ pub struct App {
 
 impl App {
     pub fn new(csv_path: path::PathBuf) -> Result<Self> {
-        let (col_headers, table_rows, imgdir_paths) = utils::parse_csv(&csv_path)?;
+        let (col_headers, table_rows, imgdir_paths) = pixmux::parse_csv(&csv_path)?;
         Ok(Self {
             running: false,
             current_tab: Tab::Data,
