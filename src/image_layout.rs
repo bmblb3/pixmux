@@ -68,7 +68,11 @@ impl ImageLayout {
                         let picker = Picker::from_query_stdio().unwrap();
                         let image_source = image::ImageReader::open(f).unwrap().decode().unwrap();
                         let mut image = picker.new_resize_protocol(image_source);
-                        frame.render_widget(block.clone().style(Color::Yellow), area);
+                        if *pane_enum == app.current_imgpane_id {
+                            frame.render_widget(block.clone().style(Color::LightYellow), area);
+                        } else {
+                            frame.render_widget(block.clone(), area);
+                        }
                         frame.render_stateful_widget(
                             StatefulImage::default(),
                             block.inner(area),
