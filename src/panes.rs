@@ -53,6 +53,11 @@ impl Pane {
         self.collect_leaf_paths_impl(&mut current_path, &mut all_paths);
         all_paths
     }
+
+    pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> bool {
+        *self = Self::new_split(direction);
+        true
+    }
 }
 
 #[cfg(test)]
@@ -173,5 +178,15 @@ mod tests {
                 vec![false, false, false]
             ]
         );
+    }
+
+    #[test]
+    fn test_split_leaf_root() {
+        let mut tree = Pane::new_leaf();
+        let success = tree.split_leaf(&[], layout::Direction::Horizontal);
+
+        assert!(success);
+        let paths = tree.collect_leaf_paths();
+        assert_eq!(paths, vec![vec![true], vec![false]]);
     }
 }
