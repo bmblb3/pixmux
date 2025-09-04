@@ -9,7 +9,7 @@ use crate::image_layout::Pane;
 use crate::tab::Tab;
 use crate::utils;
 
-mod keymaps;
+mod events;
 
 #[derive(Debug, Default)]
 pub struct App {
