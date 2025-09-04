@@ -4,7 +4,7 @@ pub fn collect_imgfile_basenames(
     imgdir_paths: &Vec<path::PathBuf>,
 ) -> std::collections::BTreeSet<String> {
     let mut basenames = std::collections::BTreeSet::new();
-    let image_extensions = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp"];
+    let image_extensions = ["jpg", "jpeg", "png", "bmp", "tiff", "webp"];
 
     for dir_path in imgdir_paths {
         if let Ok(entries) = std::fs::read_dir(dir_path) {
