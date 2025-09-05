@@ -21,7 +21,9 @@ impl App {
             (_, KeyCode::Char('q')) => self.quit(),
 
             //
-            (KeyModifiers::NONE, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
+            (KeyModifiers::NONE, KeyCode::Tab) => {
+                self.current_tab = self.current_tab.cycle();
+            }
 
             //
             (KeyModifiers::NONE, KeyCode::Up) => {

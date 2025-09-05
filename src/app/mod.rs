@@ -1,18 +1,18 @@
 use std::path::{self, PathBuf};
 
 use color_eyre::Result;
-use pixmux::Pane;
+use pixmux::{Pane, Tab};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 
-use crate::ui::Tab;
+use crate::ui;
 
 mod events;
 
 #[derive(Default)]
 pub struct App {
     running: bool,
-    current_tab: Tab,
+    pub current_tab: Tab,
     pub col_headers: Vec<String>,
     pub table_rows: Vec<Vec<String>>,
     pub imgdir_paths: Vec<std::path::PathBuf>,
@@ -26,12 +26,12 @@ impl App {
         let (col_headers, table_rows, imgdir_paths) = pixmux::parse_csv(&csv_path)?;
         Ok(Self {
             running: false,
-            current_tab: Tab::Data,
+            current_tab: Tab::default(),
             col_headers,
             table_rows,
             imgdir_paths,
             current_row_index: 0,
-            pane_tree: Pane::new_leaf(),
+            pane_tree: Pane::default(),
             current_pane_path: vec![],
         })
     }
@@ -55,8 +55,8 @@ impl App {
             .constraints([Constraint::Length(3), Constraint::Min(0)])
             .split(frame.area());
 
-        self.current_tab.render_navbar(frame, chunks[0]);
-        self.current_tab.render(frame, chunks[1], self);
+        ui::TabUI::render_navbar(frame, chunks[0], self);
+        ui::TabUI::render(frame, chunks[1], self);
     }
 
     pub fn get_basename(&self, index: &usize) -> Option<String> {
@@ -72,10 +72,6 @@ impl App {
     pub fn get_fullimgpath(&self, image_index: &usize, row_index: &usize) -> Option<PathBuf> {
         let basename = self.get_basename(image_index)?;
         Some(self.get_imgdir_path(row_index).join(basename))
-    }
-
-    pub fn next_tab(&mut self) {
-        self.current_tab = self.current_tab.next();
     }
 
     // fn set_img_impl(
