@@ -24,7 +24,7 @@ impl ImageTabUI {
                     frame.render_widget(block.clone(), area);
                 }
 
-                let imagefile = app.get_fullimgpath(image_id, &app.current_row_index);
+                let imagefile = app.get_fullimgpath(image_id, &app.current_datarow_index);
                 if let Some(f) = imagefile {
                     let image_source = image::ImageReader::open(f).unwrap().decode().unwrap();
                     let mut image = picker.new_resize_protocol(image_source);

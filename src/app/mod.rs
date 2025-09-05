@@ -12,11 +12,11 @@ mod events;
 #[derive(Default)]
 pub struct App {
     running: bool,
-    pub current_tab: Tab,
     pub col_headers: Vec<String>,
     pub table_rows: Vec<Vec<String>>,
     pub imgdir_paths: Vec<std::path::PathBuf>,
-    pub current_row_index: usize,
+    pub current_tab: Tab,
+    pub current_datarow_index: usize,
     pub pane_tree: pixmux::Pane,
     pub current_pane_path: Vec<bool>,
 }
@@ -26,11 +26,11 @@ impl App {
         let (col_headers, table_rows, imgdir_paths) = pixmux::parse_csv(&csv_path)?;
         Ok(Self {
             running: false,
-            current_tab: Tab::default(),
             col_headers,
             table_rows,
             imgdir_paths,
-            current_row_index: 0,
+            current_tab: Tab::default(),
+            current_datarow_index: 0,
             pane_tree: Pane::default(),
             current_pane_path: vec![],
         })

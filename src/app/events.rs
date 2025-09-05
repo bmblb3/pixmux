@@ -27,15 +27,15 @@ impl App {
 
             //
             (KeyModifiers::NONE, KeyCode::Up) => {
-                self.current_row_index = pixmux::step_index(
-                    self.current_row_index,
+                self.current_datarow_index = pixmux::step_index(
+                    self.current_datarow_index,
                     self.table_rows.len(),
                     pixmux::AdjustDirection::Backward,
                 )
             }
             (KeyModifiers::NONE, KeyCode::Down) => {
-                self.current_row_index = pixmux::step_index(
-                    self.current_row_index,
+                self.current_datarow_index = pixmux::step_index(
+                    self.current_datarow_index,
                     self.table_rows.len(),
                     pixmux::AdjustDirection::Forward,
                 )

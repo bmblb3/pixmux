@@ -21,7 +21,7 @@ impl TableTabUI {
                     .map(|cell| Cell::from(cell.clone()))
                     .collect::<Vec<_>>();
                 let mut table_row = Row::new(row_cells);
-                if index == app.current_row_index {
+                if index == app.current_datarow_index {
                     table_row = table_row.reversed();
                 }
                 table_row
