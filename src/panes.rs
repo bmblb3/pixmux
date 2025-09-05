@@ -1,6 +1,8 @@
 use color_eyre::eyre::{self, Ok};
 use ratatui::layout;
 
+use crate::AdjustDirection;
+
 #[derive(Clone)]
 pub enum Pane {
     Leaf {
@@ -139,11 +141,16 @@ impl Pane {
         };
         Ok(parent_path)
     }
+
+    fn cycle(&self, path: &[bool], direction: AdjustDirection) -> eyre::Result<Vec<bool>> {
+        Ok(vec![])
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::AdjustDirection;
 
     // Test creating fresh nodes
     #[test]
@@ -415,5 +422,17 @@ mod tests {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
         let result = tree.remove_leaf_at(&[true, true]);
         assert!(result.is_err());
+    }
+
+    // Cycle leafs
+    #[test]
+    fn test_cycle_root_leaf() {
+        let tree = Pane::new_leaf();
+
+        let next = tree.cycle(&[], AdjustDirection::Forward).unwrap();
+        assert_eq!(next, vec![]);
+
+        let prev = tree.cycle(&[], AdjustDirection::Backward).unwrap();
+        assert_eq!(prev, vec![]);
     }
 }
