@@ -1,11 +1,11 @@
-use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use pixmux::AdjustDirection;
 use ratatui::layout;
 
 use super::{App, Tab};
 
 impl App {
-    pub fn handle_crossterm_events(&mut self) -> Result<()> {
+    pub fn handle_crossterm_events(&mut self) -> color_eyre::Result<()> {
         match event::read()? {
             Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
             Event::Mouse(_) => {}
@@ -93,7 +93,7 @@ impl App {
             },
 
             //
-            (KeyModifiers::CONTROL, KeyCode::Left) => match self.current_tab {
+            (KeyModifiers::ALT, KeyCode::Char('h')) => match self.current_tab {
                 Tab::Image => {
                     self.pane_tree
                         .resize_leaf_at(&self.current_pane_path, layout::Direction::Horizontal, -5)
@@ -101,23 +101,7 @@ impl App {
                 }
                 Tab::Data => {}
             },
-            (KeyModifiers::CONTROL, KeyCode::Right) => match self.current_tab {
-                Tab::Image => {
-                    self.pane_tree
-                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Horizontal, 5)
-                        .unwrap();
-                }
-                Tab::Data => {}
-            },
-            (KeyModifiers::CONTROL, KeyCode::Up) => match self.current_tab {
-                Tab::Image => {
-                    self.pane_tree
-                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Vertical, -5)
-                        .unwrap();
-                }
-                Tab::Data => {}
-            },
-            (KeyModifiers::CONTROL, KeyCode::Down) => match self.current_tab {
+            (KeyModifiers::ALT, KeyCode::Char('j')) => match self.current_tab {
                 Tab::Image => {
                     self.pane_tree
                         .resize_leaf_at(&self.current_pane_path, layout::Direction::Vertical, 5)
@@ -125,10 +109,44 @@ impl App {
                 }
                 Tab::Data => {}
             },
+            (KeyModifiers::ALT, KeyCode::Char('k')) => match self.current_tab {
+                Tab::Image => {
+                    self.pane_tree
+                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Vertical, -5)
+                        .unwrap();
+                }
+                Tab::Data => {}
+            },
+            (KeyModifiers::ALT, KeyCode::Char('l')) => match self.current_tab {
+                Tab::Image => {
+                    self.pane_tree
+                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Horizontal, 5)
+                        .unwrap();
+                }
+                Tab::Data => {}
+            },
 
-            // //
-            (_, KeyCode::Char('d')) => match self.current_tab {
-                Tab::Image => todo!(),
+            //
+            (_, KeyCode::Char('ä')) => match self.current_tab {
+                Tab::Image => self
+                    .pane_tree
+                    .cycle_image(
+                        &self.current_pane_path,
+                        self.imagefile_basenames.len(),
+                        AdjustDirection::Forward,
+                    )
+                    .unwrap(),
+                Tab::Data => {}
+            },
+            (_, KeyCode::Char('ö')) => match self.current_tab {
+                Tab::Image => self
+                    .pane_tree
+                    .cycle_image(
+                        &self.current_pane_path,
+                        self.imagefile_basenames.len(),
+                        AdjustDirection::Backward,
+                    )
+                    .unwrap(),
                 Tab::Data => {}
             },
 
