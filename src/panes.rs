@@ -393,4 +393,11 @@ mod tests {
         let result = tree.remove_leaf_at(&[]);
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_remove_beyond_a_node() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        let result = tree.remove_leaf_at(&[true, true]);
+        assert!(result.is_err());
+    }
 }
