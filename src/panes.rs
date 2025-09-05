@@ -100,7 +100,7 @@ impl Pane {
             Pane::Leaf { .. } => {
                 *pane = Self::new_split(direction);
                 let mut result = path.to_vec();
-                result.push(true);
+                result.push(false);
                 Ok(result)
             }
             Pane::Split { .. } => Err(eyre::eyre!("Can only split a leaf node")),
@@ -340,11 +340,11 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_leaf();
-            let first_created_path = tree.split_leaf_at(&[], direction).unwrap();
+            let second_created_path = tree.split_leaf_at(&[], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(paths, vec![vec![true], vec![false]]);
-            assert_eq!(first_created_path, vec![true]);
+            assert_eq!(second_created_path, vec![false]);
             assert!(matches!(
                 tree.get_node_at(&[]).unwrap(),
                 &Pane::Split {
@@ -361,14 +361,14 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_split(layout::Direction::Horizontal);
-            let first_created_path = tree.split_leaf_at(&[true], direction).unwrap();
+            let second_created_path = tree.split_leaf_at(&[true], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(
                 paths,
                 vec![vec![true, true], vec![true, false], vec![false]]
             );
-            assert_eq!(first_created_path, vec![true, true]);
+            assert_eq!(second_created_path, vec![true, false]);
             assert!(matches!(
                 tree.get_node_at(&[true]).unwrap(),
                 &Pane::Split {
