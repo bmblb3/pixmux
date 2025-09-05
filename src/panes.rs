@@ -207,11 +207,11 @@ impl Pane {
 
     pub fn navigate(
         &self,
-        _path: &[bool],
+        path: &[bool],
         _layout_direction: layout::Direction,
         _adjust_direction: AdjustDirection,
     ) -> eyre::Result<Vec<bool>> {
-        Ok(vec![])
+        Ok(path.to_vec())
     }
 }
 
@@ -754,5 +754,87 @@ mod tests {
             )
             .unwrap();
         assert_eq!(prevh, vec![]);
+    }
+
+    #[test]
+    fn test_root_hsplit_on_vnav_does_nothing() {
+        let tree = Pane::new_split(layout::Direction::Horizontal);
+
+        let nextv_fromleft = tree
+            .navigate(
+                &[true],
+                layout::Direction::Vertical,
+                AdjustDirection::Forward,
+            )
+            .unwrap();
+        assert_eq!(nextv_fromleft, vec![true]);
+
+        let prevv_fromleft = tree
+            .navigate(
+                &[true],
+                layout::Direction::Vertical,
+                AdjustDirection::Backward,
+            )
+            .unwrap();
+        assert_eq!(prevv_fromleft, vec![true]);
+
+        let nextv_fromright = tree
+            .navigate(
+                &[false],
+                layout::Direction::Vertical,
+                AdjustDirection::Forward,
+            )
+            .unwrap();
+        assert_eq!(nextv_fromright, vec![false]);
+
+        let prevv_fromright = tree
+            .navigate(
+                &[false],
+                layout::Direction::Vertical,
+                AdjustDirection::Backward,
+            )
+            .unwrap();
+        assert_eq!(prevv_fromright, vec![false]);
+    }
+
+    #[test]
+    fn test_root_vsplit_on_hnav_does_nothing() {
+        let tree = Pane::new_split(layout::Direction::Vertical);
+
+        let nexth_fromtop = tree
+            .navigate(
+                &[true],
+                layout::Direction::Horizontal,
+                AdjustDirection::Forward,
+            )
+            .unwrap();
+        assert_eq!(nexth_fromtop, vec![true]);
+
+        let prevh_fromtop = tree
+            .navigate(
+                &[true],
+                layout::Direction::Horizontal,
+                AdjustDirection::Backward,
+            )
+            .unwrap();
+        assert_eq!(prevh_fromtop, vec![true]);
+
+        let nexth_frombottom = tree
+            .navigate(
+                &[false],
+                layout::Direction::Horizontal,
+                AdjustDirection::Forward,
+            )
+            .unwrap();
+        assert_eq!(nexth_frombottom, vec![false]);
+
+        let prevh_frombottom = tree
+            .navigate(
+                &[false],
+                layout::Direction::Horizontal,
+                AdjustDirection::Backward,
+            )
+            .unwrap();
+        assert_eq!(prevh_frombottom, vec![false]);
     }
 }
