@@ -39,6 +39,8 @@ macro_rules! impl_get_node_at {
 }
 
 impl Pane {
+    #![warn(clippy::used_underscore_binding)]
+
     pub fn new_leaf() -> Self {
         Pane::Leaf { image_id: 0 }
     }
@@ -157,15 +159,32 @@ impl Pane {
 
     pub fn resize_leaf_at(
         &mut self,
-        _path: &[bool],
-        _direction: layout::Direction,
-        _delta: i8,
+        path: &[bool],
+        direction: layout::Direction,
+        delta: i8,
     ) -> eyre::Result<()> {
-        match self.get_node_at(_path)? {
+        match self.get_node_at(path)? {
             Pane::Split { .. } => Err(eyre::eyre!(
                 "Resizing an entire split directly is not allowed"
             )),
-            Pane::Leaf { .. } => Ok(()),
+            Pane::Leaf { .. } => {
+                let (parent_path, _) = match path.split_at_checked(path.len().saturating_sub(1)) {
+                    Some(val) => val,
+                    _ => {
+                        return Ok(());
+                    }
+                };
+                if let Pane::Split {
+                    direction: splitdir,
+                    pct,
+                    ..
+                } = self.get_node_at_mut(parent_path)?
+                    && *splitdir == direction
+                {
+                    *pct = (*pct as i8 + delta).clamp(5, 95) as u8;
+                }
+                Ok(())
+            }
         }
     }
 }
@@ -548,9 +567,24 @@ mod tests {
         ))
     }
 
+    #[test]
+    fn test_resize_leaf_under_horizontally_stacked_split() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        tree.resize_leaf_at(&[true], layout::Direction::Horizontal, 10)
+            .unwrap();
+        assert!(matches!(
+            tree.get_node_at(&[]).unwrap(),
+            Pane::Split {
+                direction: layout::Direction::Horizontal,
+                pct: 60,
+                ..
+            }
+        ))
+    }
+
     // Disallowed to resize an entire split directly
     #[test]
-    fn test_resize_leaf_under_horizontally_stacked_split_horizontally() {
+    fn test_err_resize_split_node() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
         let result = tree.resize_leaf_at(&[], layout::Direction::Horizontal, 10);
         assert!(result.is_err());
