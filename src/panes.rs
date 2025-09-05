@@ -95,7 +95,7 @@ impl Pane {
         }
     }
 
-    pub fn remove_leaf_at(&mut self, path: &[bool]) -> eyre::Result<()> {
+    pub fn remove_leaf_at(&mut self, path: &[bool]) -> eyre::Result<Vec<bool>> {
         let to_remove = self.get_node_at(path)?;
         match to_remove {
             Pane::Leaf { .. } => {}
@@ -110,7 +110,7 @@ impl Pane {
             _ => {
                 let root = self.get_node_at_mut(path)?;
                 *root = Pane::new_leaf();
-                return Ok(());
+                return Ok(vec![]);
             }
         };
 
@@ -130,7 +130,7 @@ impl Pane {
         };
 
         *parent = (sibling).clone();
-        Ok(())
+        Ok(parent_path)
     }
 }
 
@@ -361,8 +361,9 @@ mod tests {
                 first: Box::new(Pane::Leaf { image_id: 1 }),
                 second: Box::new(Pane::Leaf { image_id: 2 }),
             };
-            tree.remove_leaf_at(&[remove_child]).unwrap();
+            let sibling = tree.remove_leaf_at(&[remove_child]).unwrap();
 
+            assert_eq!(sibling, vec![]);
             assert!(matches!(tree, Pane::Leaf { image_id: e } if e==expected));
         }
     }
@@ -376,17 +377,19 @@ mod tests {
             second: Box::new(Pane::new_leaf()),
         };
 
-        tree.remove_leaf_at(&[true, false]).unwrap();
+        let sibling = tree.remove_leaf_at(&[true, false]).unwrap();
         let paths = tree.collect_leaf_paths();
 
+        assert_eq!(sibling, vec![true]);
         assert_eq!(paths, vec![vec![true], vec![false]]);
     }
 
     #[test]
     fn test_remove_root_node() {
         let mut tree = Pane::Leaf { image_id: 1 };
-        tree.remove_leaf_at(&[]).unwrap();
+        let sibling = tree.remove_leaf_at(&[]).unwrap();
 
+        assert_eq!(sibling, vec![]);
         assert!(matches!(tree, Pane::Leaf { image_id: 0 }));
     }
 
