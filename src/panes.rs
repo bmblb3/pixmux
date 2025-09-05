@@ -204,6 +204,15 @@ impl Pane {
             }
         }
     }
+
+    pub fn navigate(
+        &self,
+        _path: &[bool],
+        _layout_direction: layout::Direction,
+        _adjust_direction: AdjustDirection,
+    ) -> eyre::Result<Vec<bool>> {
+        Ok(vec![])
+    }
 }
 
 #[cfg(test)]
@@ -715,5 +724,35 @@ mod tests {
             tree.get_node_at(&[true]).unwrap(),
             Pane::Leaf { image_id: 0 }
         ));
+    }
+
+    // Navigate directions
+    #[test]
+    fn test_root_leaf_on_navigate_does_nothing() {
+        let tree = Pane::new_leaf();
+
+        let nextv = tree
+            .navigate(&[], layout::Direction::Vertical, AdjustDirection::Forward)
+            .unwrap();
+        assert_eq!(nextv, vec![]);
+
+        let prevv = tree
+            .navigate(&[], layout::Direction::Vertical, AdjustDirection::Backward)
+            .unwrap();
+        assert_eq!(prevv, vec![]);
+
+        let nexth = tree
+            .navigate(&[], layout::Direction::Horizontal, AdjustDirection::Forward)
+            .unwrap();
+        assert_eq!(nexth, vec![]);
+
+        let prevh = tree
+            .navigate(
+                &[],
+                layout::Direction::Horizontal,
+                AdjustDirection::Backward,
+            )
+            .unwrap();
+        assert_eq!(prevh, vec![]);
     }
 }
