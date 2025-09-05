@@ -9,9 +9,9 @@ use ratatui_image::{StatefulImage, picker};
 
 use crate::app::App;
 
-pub struct ImageLayout;
+pub struct ImageTabUI;
 
-impl ImageLayout {
+impl ImageTabUI {
     fn render_pane(pane: &Pane, frame: &mut Frame, area: Rect, app: &App, picker: &picker::Picker) {
         match pane {
             Pane::Leaf { image_id } => {

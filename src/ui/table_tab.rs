@@ -4,9 +4,9 @@ use ratatui::widgets::{Block, Borders, Cell, Row, Table};
 
 use crate::App;
 
-pub struct TableUI;
+pub struct TableTabUI;
 
-impl TableUI {
+impl TableTabUI {
     pub fn create_widget(app: &App) -> Table<'static> {
         let collen = app.col_headers.len();
         let constraints = vec![Constraint::Length(20); collen];

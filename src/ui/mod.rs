@@ -1,7 +1,7 @@
-mod image_layout;
-mod navbar_ui;
-mod table_ui;
+mod image_tab;
+mod navbar;
+mod table_tab;
 
-pub use image_layout::ImageLayout;
-pub use navbar_ui::NavBarUI;
-pub use table_ui::TableUI;
+pub use image_tab::ImageTabUI;
+pub use navbar::NavBarUI;
+pub use table_tab::TableTabUI;

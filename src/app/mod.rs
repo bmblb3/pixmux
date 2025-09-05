@@ -59,10 +59,10 @@ impl App {
 
         match self.current_tab {
             pixmux::Tab::Data => {
-                frame.render_widget(ui::TableUI::create_widget(self), chunks[1]);
+                frame.render_widget(ui::TableTabUI::create_widget(self), chunks[1]);
             }
             pixmux::Tab::Image => {
-                ui::ImageLayout::render(frame, chunks[1], self);
+                ui::ImageTabUI::render(frame, chunks[1], self);
             }
         }
     }
