@@ -80,7 +80,7 @@ impl Pane {
         impl_get_node_at!(self, path, get_node_at)
     }
 
-    pub fn split_leaf(
+    pub fn split_leaf_at(
         &mut self,
         path: &[bool],
         direction: layout::Direction,
@@ -284,7 +284,7 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_leaf();
-            let first_new = tree.split_leaf(&[], direction).unwrap();
+            let first_new = tree.split_leaf_at(&[], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(paths, vec![vec![true], vec![false]]);
@@ -305,7 +305,7 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_split(layout::Direction::Horizontal);
-            let first_new = tree.split_leaf(&[true], direction).unwrap();
+            let first_new = tree.split_leaf_at(&[true], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(
@@ -336,14 +336,14 @@ mod tests {
     #[test]
     fn test_err_splitting_a_split() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
-        let result = tree.split_leaf(&[], layout::Direction::Horizontal);
+        let result = tree.split_leaf_at(&[], layout::Direction::Horizontal);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_err_splitting_a_path_beyond_a_leaf() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
-        let result = tree.split_leaf(&[true, true], layout::Direction::Horizontal);
+        let result = tree.split_leaf_at(&[true, true], layout::Direction::Horizontal);
         assert!(result.is_err());
     }
 
