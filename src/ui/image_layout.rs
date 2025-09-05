@@ -1,3 +1,6 @@
+use std::ptr;
+
+use pixmux::Pane;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::Color;
@@ -6,19 +9,12 @@ use ratatui_image::StatefulImage;
 use ratatui_image::picker::Picker;
 
 use crate::app::App;
-use crate::app::imgpane::Pane;
 
 #[derive(Default)]
 pub struct ImageLayout;
 
 impl ImageLayout {
-    fn render_imgpane(
-        frame: &mut Frame,
-        area: Rect,
-        pane: &Pane,
-        pane_enum: &mut usize,
-        app: &App,
-    ) {
+    fn render_imgpane(frame: &mut Frame, area: Rect, pane: &Pane, app: &App) {
         match pane {
             Pane::Leaf { image_id } => {
                 let block = Block::bordered().border_type(BorderType::QuadrantInside);
@@ -28,11 +24,16 @@ impl ImageLayout {
                         let picker = Picker::from_query_stdio().unwrap();
                         let image_source = image::ImageReader::open(f).unwrap().decode().unwrap();
                         let mut image = picker.new_resize_protocol(image_source);
-                        if *pane_enum == app.current_imgpane_id {
+
+                        let current_pane =
+                            app.pane_tree.get_node_at(&app.current_pane_path).unwrap();
+
+                        if ptr::eq(current_pane, pane) {
                             frame.render_widget(block.clone().style(Color::LightYellow), area);
                         } else {
                             frame.render_widget(block.clone(), area);
                         }
+
                         frame.render_stateful_widget(
                             StatefulImage::default(),
                             block.inner(area),
@@ -43,8 +44,6 @@ impl ImageLayout {
                         frame.render_widget(block, area);
                     }
                 }
-
-                *pane_enum += 1;
             }
             Pane::Split {
                 direction,
@@ -62,14 +61,13 @@ impl ImageLayout {
                     .direction(*direction)
                     .constraints(constraints)
                     .split(area);
-                Self::render_imgpane(frame, chunks[0], first, pane_enum, app);
-                Self::render_imgpane(frame, chunks[1], second, pane_enum, app);
+                Self::render_imgpane(frame, chunks[0], first, app);
+                Self::render_imgpane(frame, chunks[1], second, app);
             }
         }
     }
 
     pub fn render(frame: &mut Frame, area: Rect, app: &App) {
-        let mut imgpane_enum = 0;
-        Self::render_imgpane(frame, area, &app.root_imgpane, &mut imgpane_enum, app);
+        Self::render_imgpane(frame, area, &app.pane_tree, app);
     }
 }

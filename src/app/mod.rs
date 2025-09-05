@@ -1,16 +1,15 @@
 use std::path::{self, PathBuf};
 
 use color_eyre::Result;
+use pixmux::Pane;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 
-use crate::app::imgpane::Pane;
 use crate::ui::Tab;
 
 mod events;
-pub mod imgpane;
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct App {
     running: bool,
     current_tab: Tab,
@@ -18,8 +17,8 @@ pub struct App {
     pub table_rows: Vec<Vec<String>>,
     pub imgdir_paths: Vec<std::path::PathBuf>,
     pub current_row_index: usize,
-    pub root_imgpane: Pane,
-    pub current_imgpane_id: usize,
+    pub pane_tree: pixmux::Pane,
+    pub current_pane_path: Vec<bool>,
 }
 
 impl App {
@@ -32,8 +31,8 @@ impl App {
             table_rows,
             imgdir_paths,
             current_row_index: 0,
-            current_imgpane_id: 0,
-            root_imgpane: Pane::leaf(),
+            pane_tree: Pane::new_leaf(),
+            current_pane_path: vec![],
         })
     }
 
@@ -79,72 +78,66 @@ impl App {
         self.current_tab = self.current_tab.next();
     }
 
-    fn cycle_imagepane(&mut self, dir: pixmux::AdjustDirection) {
-        let mut pane_count = 0usize;
-        Self::get_total_imgpanes(&self.root_imgpane, &mut pane_count);
-        self.current_imgpane_id = pixmux::cycle_index(self.current_imgpane_id, pane_count, dir);
-    }
+    // fn set_img_impl(
+    //     pane: &mut Pane,
+    //     target_imgpane_id: &usize,
+    //     candidate_imgpane_id: &mut usize,
+    //     nr_images: &usize,
+    //     cycle_direction: &pixmux::AdjustDirection,
+    // ) -> bool {
+    //     match pane {
+    //         Pane::Split { first, second, .. } => {
+    //             if Self::set_img_impl(
+    //                 first,
+    //                 target_imgpane_id,
+    //                 candidate_imgpane_id,
+    //                 nr_images,
+    //                 cycle_direction,
+    //             ) {
+    //                 return true;
+    //             }
+    //
+    //             if Self::set_img_impl(
+    //                 second,
+    //                 target_imgpane_id,
+    //                 candidate_imgpane_id,
+    //                 nr_images,
+    //                 cycle_direction,
+    //             ) {
+    //                 return true;
+    //             }
+    //
+    //             false
+    //         }
+    //         Pane::Leaf { image_id } => {
+    //             if candidate_imgpane_id != target_imgpane_id {
+    //                 *candidate_imgpane_id += 1;
+    //                 return false;
+    //             }
+    //             match cycle_direction {
+    //                 pixmux::AdjustDirection::Forward => {
+    //                     *image_id += 1;
+    //                     *image_id %= nr_images;
+    //                 }
+    //                 pixmux::AdjustDirection::Backward => {
+    //                     *image_id += nr_images - 1;
+    //                     *image_id %= nr_images;
+    //                 }
+    //             }
+    //             true
+    //         }
+    //     }
+    // }
 
-    fn set_img_impl(
-        pane: &mut Pane,
-        target_imgpane_id: &usize,
-        candidate_imgpane_id: &mut usize,
-        nr_images: &usize,
-        cycle_direction: &pixmux::AdjustDirection,
-    ) -> bool {
-        match pane {
-            Pane::Split { first, second, .. } => {
-                if Self::set_img_impl(
-                    first,
-                    target_imgpane_id,
-                    candidate_imgpane_id,
-                    nr_images,
-                    cycle_direction,
-                ) {
-                    return true;
-                }
-
-                if Self::set_img_impl(
-                    second,
-                    target_imgpane_id,
-                    candidate_imgpane_id,
-                    nr_images,
-                    cycle_direction,
-                ) {
-                    return true;
-                }
-
-                false
-            }
-            Pane::Leaf { image_id } => {
-                if candidate_imgpane_id != target_imgpane_id {
-                    *candidate_imgpane_id += 1;
-                    return false;
-                }
-                match cycle_direction {
-                    pixmux::AdjustDirection::Forward => {
-                        *image_id += 1;
-                        *image_id %= nr_images;
-                    }
-                    pixmux::AdjustDirection::Backward => {
-                        *image_id += nr_images - 1;
-                        *image_id %= nr_images;
-                    }
-                }
-                true
-            }
-        }
-    }
-
-    fn next_img(&mut self) {
-        let mut candidate_imgpane_id = 0;
-        let nr_images = pixmux::collect_imgfile_basenames(&self.imgdir_paths).len();
-        Self::set_img_impl(
-            &mut self.root_imgpane,
-            &self.current_imgpane_id,
-            &mut candidate_imgpane_id,
-            &nr_images,
-            &pixmux::AdjustDirection::Forward,
-        );
-    }
+    // fn next_img(&mut self) {
+    //     let mut candidate_imgpane_id = 0;
+    //     let nr_images = pixmux::collect_imgfile_basenames(&self.imgdir_paths).len();
+    //     Self::set_img_impl(
+    //         &mut self.pane_tree,
+    //         &self.current_imgpane_id,
+    //         &mut candidate_imgpane_id,
+    //         &nr_images,
+    //         &pixmux::AdjustDirection::Forward,
+    //     );
+    // }
 }

@@ -1,6 +1,6 @@
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use ratatui::layout::Direction;
+use ratatui::layout;
 
 use super::{App, Tab};
 
@@ -18,11 +18,12 @@ impl App {
     pub fn on_key_event(&mut self, key: KeyEvent) {
         match (key.modifiers, key.code) {
             //
-            (_, KeyCode::Esc | KeyCode::Char('q'))
-            | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
+            (_, KeyCode::Char('q')) => self.quit(),
 
             //
             (KeyModifiers::NONE, KeyCode::Tab | KeyCode::BackTab) => self.next_tab(),
+
+            //
             (KeyModifiers::NONE, KeyCode::Up) => {
                 self.current_row_index = pixmux::step_index(
                     self.current_row_index,
@@ -40,53 +41,96 @@ impl App {
 
             //
             (KeyModifiers::NONE, KeyCode::Char('n')) => match self.current_tab {
-                Tab::Image => self.cycle_imagepane(pixmux::AdjustDirection::Forward),
+                Tab::Image => {
+                    self.current_pane_path = self
+                        .pane_tree
+                        .cycle(&self.current_pane_path, pixmux::AdjustDirection::Forward)
+                        .unwrap();
+                }
                 Tab::Data => {}
             },
             (KeyModifiers::SHIFT, KeyCode::Char('N')) => match self.current_tab {
-                Tab::Image => self.cycle_imagepane(pixmux::AdjustDirection::Backward),
+                Tab::Image => {
+                    self.current_pane_path = self
+                        .pane_tree
+                        .cycle(&self.current_pane_path, pixmux::AdjustDirection::Backward)
+                        .unwrap();
+                }
                 Tab::Data => {}
             },
 
             //
-            (KeyModifiers::ALT, KeyCode::Char('v')) => match self.current_tab {
-                Tab::Image => self.split_imgpane(Direction::Horizontal),
+            (KeyModifiers::CONTROL, KeyCode::Char('v')) => match self.current_tab {
+                Tab::Image => {
+                    self.current_pane_path = self
+                        .pane_tree
+                        .split_leaf_at(&self.current_pane_path, layout::Direction::Horizontal)
+                        .unwrap();
+                }
                 Tab::Data => {}
             },
-            (KeyModifiers::ALT, KeyCode::Char('s')) => match self.current_tab {
-                Tab::Image => self.split_imgpane(Direction::Vertical),
-                Tab::Data => {}
-            },
-
-            //
-            (KeyModifiers::ALT, KeyCode::Left) => match self.current_tab {
-                Tab::Image => self.resize_imgpane(-5, Direction::Horizontal),
-                Tab::Data => {}
-            },
-            (KeyModifiers::ALT, KeyCode::Right) => match self.current_tab {
-                Tab::Image => self.resize_imgpane(5, Direction::Horizontal),
-                Tab::Data => {}
-            },
-            (KeyModifiers::ALT, KeyCode::Up) => match self.current_tab {
-                Tab::Image => self.resize_imgpane(-5, Direction::Vertical),
-                Tab::Data => {}
-            },
-            (KeyModifiers::ALT, KeyCode::Down) => match self.current_tab {
-                Tab::Image => self.resize_imgpane(5, Direction::Vertical),
+            (KeyModifiers::CONTROL, KeyCode::Char('s')) => match self.current_tab {
+                Tab::Image => {
+                    self.current_pane_path = self
+                        .pane_tree
+                        .split_leaf_at(&self.current_pane_path, layout::Direction::Vertical)
+                        .unwrap();
+                }
                 Tab::Data => {}
             },
 
             //
-            (KeyModifiers::ALT, KeyCode::Char('x')) => match self.current_tab {
-                Tab::Image => self.remove_imgpane(),
+            (KeyModifiers::CONTROL, KeyCode::Char('x')) => match self.current_tab {
+                Tab::Image => {
+                    self.current_pane_path = self
+                        .pane_tree
+                        .remove_leaf_at(&self.current_pane_path)
+                        .unwrap();
+                }
                 Tab::Data => {}
             },
 
             //
-            (_, KeyCode::Char('d')) => match self.current_tab {
-                Tab::Image => self.next_img(),
+            (KeyModifiers::CONTROL, KeyCode::Left) => match self.current_tab {
+                Tab::Image => {
+                    self.pane_tree
+                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Horizontal, -5)
+                        .unwrap();
+                }
                 Tab::Data => {}
             },
+            (KeyModifiers::CONTROL, KeyCode::Right) => match self.current_tab {
+                Tab::Image => {
+                    self.pane_tree
+                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Horizontal, 5)
+                        .unwrap();
+                }
+                Tab::Data => {}
+            },
+            (KeyModifiers::CONTROL, KeyCode::Up) => match self.current_tab {
+                Tab::Image => {
+                    self.pane_tree
+                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Vertical, -5)
+                        .unwrap();
+                }
+                Tab::Data => {}
+            },
+            (KeyModifiers::CONTROL, KeyCode::Down) => match self.current_tab {
+                Tab::Image => {
+                    self.pane_tree
+                        .resize_leaf_at(&self.current_pane_path, layout::Direction::Vertical, 5)
+                        .unwrap();
+                }
+                Tab::Data => {}
+            },
+
+            // //
+            // (_, KeyCode::Char('d')) => match self.current_tab {
+            //     Tab::Image => self.next_img(),
+            //     Tab::Data => {}
+            // },
+
+            //
             _ => {}
         }
     }
