@@ -349,7 +349,7 @@ mod tests {
 
     // Remove nodes
     #[test]
-    fn test_splitting_a_simple_leaf_node() {
+    fn test_remove_a_simple_leaf_node() {
         let test_cases = [(true, 2), (false, 1)];
 
         for test_case in test_cases {
