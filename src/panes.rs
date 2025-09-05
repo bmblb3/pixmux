@@ -1,4 +1,4 @@
-use color_eyre::eyre::{self, Ok, OptionExt as _};
+use color_eyre::eyre::{self, Ok};
 use ratatui::layout;
 
 #[derive(Clone)]
@@ -91,11 +91,25 @@ impl Pane {
         }
     }
 
-    pub fn remove_node_at(&mut self, path: &[bool]) -> eyre::Result<()> {
+    pub fn remove_leaf_at(&mut self, path: &[bool]) -> eyre::Result<()> {
+        let to_remove = self.get_node_at(path)?;
+        match to_remove {
+            Pane::Leaf { .. } => {}
+            Pane::Split { .. } => {
+                return Err(eyre::eyre!("Not allowed to remove a split node"));
+            }
+        }
+
         let mut parent_path = path.to_vec();
-        let is_first_child = parent_path
-            .pop()
-            .ok_or_eyre(eyre::eyre!("Cannot split the root"))?;
+        let removing_first_child = match parent_path.pop() {
+            Some(boolval) => boolval,
+            _ => {
+                let root = self.get_node_at_mut(path)?;
+                *root = Pane::new_leaf();
+                return Ok(());
+            }
+        };
+
         let parent = self.get_node_at_mut(&parent_path)?;
 
         let sibling = match parent {
@@ -103,15 +117,15 @@ impl Pane {
                 return Err(eyre::eyre!("Parent does not seem to be a split node!"));
             }
             Pane::Split { first, second, .. } => {
-                if is_first_child {
-                    second
+                if removing_first_child {
+                    &**second
                 } else {
-                    first
+                    &**first
                 }
             }
         };
 
-        *parent = (**sibling).clone();
+        *parent = (sibling).clone();
         Ok(())
     }
 }
@@ -341,7 +355,7 @@ mod tests {
                 first: Box::new(Pane::Leaf { image_id: 1 }),
                 second: Box::new(Pane::Leaf { image_id: 2 }),
             };
-            tree.remove_node_at(&[remove_child]).unwrap();
+            tree.remove_leaf_at(&[remove_child]).unwrap();
 
             assert!(matches!(tree, Pane::Leaf { image_id: e } if e==expected));
         }
@@ -356,9 +370,27 @@ mod tests {
             second: Box::new(Pane::new_leaf()),
         };
 
-        tree.remove_node_at(&[true, false]).unwrap();
+        tree.remove_leaf_at(&[true, false]).unwrap();
         let paths = tree.collect_leaf_paths();
 
         assert_eq!(paths, vec![vec![true], vec![false]]);
+    }
+
+    #[test]
+    fn test_remove_root_node() {
+        let mut tree = Pane::Leaf { image_id: 1 };
+        tree.remove_leaf_at(&[]).unwrap();
+
+        assert!(matches!(tree, Pane::Leaf { image_id: 0 }));
+    }
+
+    // Removal fails because
+    // 1. Removing a split (business logic disallows this)
+    // 2. Removing beyond a node
+    #[test]
+    fn test_remove_split() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        let result = tree.remove_leaf_at(&[]);
+        assert!(result.is_err());
     }
 }
