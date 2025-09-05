@@ -80,12 +80,16 @@ impl Pane {
         impl_get_node_at!(self, path, get_node_at)
     }
 
-    pub fn split_leaf(&mut self, path: &[bool], direction: layout::Direction) -> eyre::Result<()> {
+    pub fn split_leaf(
+        &mut self,
+        path: &[bool],
+        direction: layout::Direction,
+    ) -> eyre::Result<Vec<bool>> {
         let pane = self.get_node_at_mut(path)?;
         match pane {
             Pane::Leaf { .. } => {
                 *pane = Self::new_split(direction);
-                Ok(())
+                Ok([path, &[true]].concat())
             }
             Pane::Split { .. } => Err(eyre::eyre!("Can only split a leaf node")),
         }
@@ -136,14 +140,14 @@ mod tests {
 
     // Test creating fresh nodes
     #[test]
-    fn test_new_leaf() {
+    fn test_new_leaf_root() {
         let tree = Pane::new_leaf();
 
         assert!(matches!(tree, Pane::Leaf { .. }));
     }
 
     #[test]
-    fn test_new_split() {
+    fn test_new_split_root() {
         let tree = Pane::new_split(layout::Direction::Horizontal);
 
         assert!(matches!(
@@ -156,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn test_split_directions() {
+    fn test_get_node_at() {
         let directions = vec![layout::Direction::Horizontal, layout::Direction::Vertical];
 
         for direction in directions {
@@ -178,7 +182,7 @@ mod tests {
 
     // Test for leaves collection
     #[test]
-    fn test_new_split_collect_leaves() {
+    fn test_new_root_split_collect_leaves() {
         let tree = Pane::new_split(layout::Direction::Horizontal);
         let paths = tree.collect_leaf_paths();
 
@@ -280,10 +284,11 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_leaf();
-            tree.split_leaf(&[], direction).unwrap();
+            let first_new = tree.split_leaf(&[], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(paths, vec![vec![true], vec![false]]);
+            assert_eq!(first_new, vec![true]);
             assert!(matches!(
                 tree.get_node_at(&[]).unwrap(),
                 &Pane::Split {
@@ -300,13 +305,14 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_split(layout::Direction::Horizontal);
-            tree.split_leaf(&[true], direction).unwrap();
+            let first_new = tree.split_leaf(&[true], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(
                 paths,
                 vec![vec![true, true], vec![true, false], vec![false]]
             );
+            assert_eq!(first_new, vec![true, true]);
             assert!(matches!(
                 tree.get_node_at(&[true]).unwrap(),
                 &Pane::Split {
