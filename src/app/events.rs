@@ -127,10 +127,10 @@ impl App {
             },
 
             // //
-            // (_, KeyCode::Char('d')) => match self.current_tab {
-            //     Tab::Image => self.next_img(),
-            //     Tab::Data => {}
-            // },
+            (_, KeyCode::Char('d')) => match self.current_tab {
+                Tab::Image => todo!(),
+                Tab::Data => {}
+            },
 
             //
             _ => {}

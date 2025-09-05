@@ -1,6 +1,6 @@
 use std::path;
 
-pub fn collect_imagefile_basenames(imgdir_paths: &Vec<path::PathBuf>) -> Vec<String> {
+pub fn collect_basenames(imgdir_paths: &Vec<path::PathBuf>) -> Vec<String> {
     let mut basenames = std::collections::BTreeSet::new();
     let image_extensions = ["jpg", "jpeg", "png", "bmp", "tiff", "webp"];
 
@@ -38,7 +38,7 @@ mod tests {
         fs::write(temp_dir_path.join("not_image.txt"), b"").unwrap();
 
         let imgdir_paths = vec![temp_dir_path];
-        let result = collect_imagefile_basenames(&imgdir_paths);
+        let result = collect_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 2);
         assert!(result.contains(&"image1.jpg".to_string()));
@@ -54,7 +54,7 @@ mod tests {
         fs::write(temp_dir_path.join("subdir").join("image.jpg"), b"").unwrap();
 
         let imgdir_paths = vec![temp_dir_path];
-        let result = collect_imagefile_basenames(&imgdir_paths);
+        let result = collect_basenames(&imgdir_paths);
 
         assert!(result.is_empty());
     }
@@ -70,7 +70,7 @@ mod tests {
         fs::write(temp_dir_path2.join("image2.jpg"), b"").unwrap();
 
         let imgdir_paths = vec![temp_dir_path1, temp_dir_path2];
-        let result = collect_imagefile_basenames(&imgdir_paths);
+        let result = collect_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 2);
         assert!(result.contains(&"image1.jpg".to_string()));
@@ -88,7 +88,7 @@ mod tests {
         fs::write(temp_dir_path2.join("image1.png"), b"").unwrap();
 
         let imgdir_paths = vec![temp_dir_path1, temp_dir_path2];
-        let result = collect_imagefile_basenames(&imgdir_paths);
+        let result = collect_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 2);
         assert!(result.contains(&"image1.jpg".to_string()));
@@ -106,7 +106,7 @@ mod tests {
         fs::write(temp_dir_path2.join("image1.jpg"), b"").unwrap();
 
         let imgdir_paths = vec![temp_dir_path1, temp_dir_path2];
-        let result = collect_imagefile_basenames(&imgdir_paths);
+        let result = collect_basenames(&imgdir_paths);
 
         assert_eq!(result.len(), 1);
         assert!(result.contains(&"image1.jpg".to_string()));
@@ -120,7 +120,7 @@ mod tests {
         fs::write(temp_dir_path.join("not_an_image.txt"), b"").unwrap();
 
         let imgdir_paths = vec![temp_dir_path];
-        let result = collect_imagefile_basenames(&imgdir_paths);
+        let result = collect_basenames(&imgdir_paths);
 
         assert!(result.is_empty());
     }
@@ -132,7 +132,7 @@ mod tests {
         fs::write(temp_dir_path.join("image.jpg.extra"), b"").unwrap();
 
         let imgdir_paths = vec![temp_dir_path];
-        let result = collect_imagefile_basenames(&imgdir_paths);
+        let result = collect_basenames(&imgdir_paths);
 
         assert!(result.is_empty());
     }

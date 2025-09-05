@@ -24,9 +24,15 @@ impl ImageTabUI {
                     frame.render_widget(block.clone(), area);
                 }
 
-                let imagefile = app.get_fullimgpath(image_id, &app.current_datarow_index);
-                if let Some(f) = imagefile {
-                    let image_source = image::ImageReader::open(f).unwrap().decode().unwrap();
+                let imagedir = app.imagedir_paths.get(app.current_datarow_index).unwrap();
+                let imagefile_basename = app.imagefile_basenames.get(*image_id).unwrap();
+                let imagefile = imagedir.join(imagefile_basename);
+
+                if imagefile.exists() {
+                    let image_source = image::ImageReader::open(imagefile)
+                        .unwrap()
+                        .decode()
+                        .unwrap();
                     let mut image = picker.new_resize_protocol(image_source);
 
                     frame.render_stateful_widget(
