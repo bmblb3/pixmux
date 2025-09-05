@@ -1,7 +1,7 @@
-use color_eyre::eyre::{self, Ok};
+use color_eyre::eyre::{self, Ok, OptionExt};
 use ratatui::layout;
 
-use crate::AdjustDirection;
+use crate::{AdjustDirection, cycle_index};
 
 #[derive(Clone)]
 pub enum Pane {
@@ -142,8 +142,17 @@ impl Pane {
         Ok(parent_path)
     }
 
-    fn cycle(&self, path: &[bool], direction: AdjustDirection) -> eyre::Result<Vec<bool>> {
-        Ok(vec![])
+    pub fn cycle(&self, path: &[bool], direction: AdjustDirection) -> eyre::Result<Vec<bool>> {
+        let leaf_paths = self.collect_leaf_paths();
+        let current_pos = leaf_paths
+            .iter()
+            .position(|x| x == path)
+            .ok_or_eyre("Could not find current path in leaf paths")?;
+        let cycled_index = cycle_index(current_pos, leaf_paths.len(), direction);
+        let cycled_path = leaf_paths
+            .get(cycled_index)
+            .ok_or_eyre("Could not find cycled path")?;
+        Ok(cycled_path.clone())
     }
 }
 
@@ -434,5 +443,22 @@ mod tests {
 
         let prev = tree.cycle(&[], AdjustDirection::Backward).unwrap();
         assert_eq!(prev, vec![]);
+    }
+
+    #[test]
+    fn test_cycle_nested_leaf() {
+        let tree = Pane::new_split(layout::Direction::Horizontal);
+
+        let next = tree.cycle(&[true], AdjustDirection::Forward).unwrap();
+        assert_eq!(next, vec![false]);
+
+        let next = tree.cycle(&[false], AdjustDirection::Forward).unwrap();
+        assert_eq!(next, vec![true]);
+
+        let prev = tree.cycle(&[true], AdjustDirection::Backward).unwrap();
+        assert_eq!(prev, vec![false]);
+
+        let prev = tree.cycle(&[false], AdjustDirection::Backward).unwrap();
+        assert_eq!(prev, vec![true]);
     }
 }
