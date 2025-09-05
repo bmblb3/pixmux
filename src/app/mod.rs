@@ -55,8 +55,16 @@ impl App {
             .constraints([Constraint::Length(3), Constraint::Min(0)])
             .split(frame.area());
 
-        ui::NavBarUI::render_navbar(frame, chunks[0], self);
-        ui::NavBarUI::render(frame, chunks[1], self);
+        ui::NavBarUI::render(frame, chunks[0], self);
+
+        match self.current_tab {
+            pixmux::Tab::Data => {
+                frame.render_widget(ui::TableUI::create_widget(self), chunks[1]);
+            }
+            pixmux::Tab::Image => {
+                ui::ImageLayout::render(frame, chunks[1], self);
+            }
+        }
     }
 
     pub fn get_basename(&self, index: &usize) -> Option<String> {
