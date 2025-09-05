@@ -161,7 +161,7 @@ impl Pane {
         &mut self,
         path: &[bool],
         direction: layout::Direction,
-        delta: i8,
+        first_pane_delta: i8,
     ) -> eyre::Result<()> {
         if path.is_empty() {
             return Ok(());
@@ -180,9 +180,9 @@ impl Pane {
         } = parent_node
         {
             if *splitdir == direction {
-                *pct = (*pct as i8 + delta).clamp(5, 95) as u8;
+                *pct = (*pct as i8 + first_pane_delta).clamp(5, 95) as u8;
             } else {
-                self.resize_leaf_at(parent_path, direction, delta)?;
+                self.resize_leaf_at(parent_path, direction, first_pane_delta)?;
             }
         }
         Ok(())
