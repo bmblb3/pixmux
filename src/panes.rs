@@ -461,4 +461,41 @@ mod tests {
         let prev = tree.cycle(&[false], AdjustDirection::Backward).unwrap();
         assert_eq!(prev, vec![true]);
     }
+
+    #[test]
+    fn test_cycle_deeply_nested_leaf() {
+        let tree = Pane::Split {
+            direction: layout::Direction::Horizontal,
+            pct: 50,
+            first: Box::new(Pane::new_leaf()),
+            second: Box::new(Pane::Split {
+                direction: layout::Direction::Vertical,
+                pct: 50,
+                first: Box::new(Pane::new_leaf()),
+                second: Box::new(Pane::new_split(layout::Direction::Horizontal)),
+            }),
+        };
+
+        assert_eq!(
+            tree.cycle(&[true], AdjustDirection::Forward).unwrap(),
+            vec![false, true]
+        );
+
+        assert_eq!(
+            tree.cycle(&[false, false, false], AdjustDirection::Forward)
+                .unwrap(),
+            vec![true]
+        );
+
+        assert_eq!(
+            tree.cycle(&[true], AdjustDirection::Backward).unwrap(),
+            vec![false, false, false]
+        );
+
+        assert_eq!(
+            tree.cycle(&[false, false, false], AdjustDirection::Backward)
+                .unwrap(),
+            vec![false, false, true]
+        );
+    }
 }
