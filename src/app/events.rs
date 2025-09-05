@@ -2,8 +2,7 @@ use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::layout::Direction;
 
-use super::App;
-use crate::tab::Tab;
+use super::{App, Tab};
 
 impl App {
     pub fn handle_crossterm_events(&mut self) -> Result<()> {

@@ -5,7 +5,7 @@ use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 
 use crate::app::imgpane::Pane;
-use crate::tab::Tab;
+use crate::ui::Tab;
 
 mod events;
 pub mod imgpane;
