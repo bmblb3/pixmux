@@ -161,7 +161,12 @@ impl Pane {
         _direction: layout::Direction,
         _delta: i8,
     ) -> eyre::Result<()> {
-        Ok(())
+        match self.get_node_at(_path)? {
+            Pane::Split { .. } => Err(eyre::eyre!(
+                "Resizing an entire split directly is not allowed"
+            )),
+            Pane::Leaf { .. } => Ok(()),
+        }
     }
 }
 
@@ -541,5 +546,13 @@ mod tests {
                 ..
             }
         ))
+    }
+
+    // Disallowed to resize an entire split directly
+    #[test]
+    fn test_resize_leaf_under_horizontally_stacked_split_horizontally() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+        let result = tree.resize_leaf_at(&[], layout::Direction::Horizontal, 10);
+        assert!(result.is_err());
     }
 }
