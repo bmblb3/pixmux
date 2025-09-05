@@ -187,6 +187,23 @@ impl Pane {
         }
         Ok(())
     }
+
+    pub fn cycle_image(
+        &mut self,
+        path: &[bool],
+        size: usize,
+        direction: AdjustDirection,
+    ) -> eyre::Result<()> {
+        let node = self.get_node_at_mut(path)?;
+
+        match node {
+            Pane::Split { .. } => Err(eyre::eyre!("Cannot change image on a split node")),
+            Pane::Leaf { image_id } => {
+                *image_id = crate::cycle_index(*image_id, size, direction);
+                Ok(())
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -649,6 +666,54 @@ mod tests {
                 pct: 50, // a child split was already resized, so we keep this
                 ..
             }
+        ));
+    }
+
+    // Update image ID
+    #[test]
+    fn test_cycle_image_id() {
+        let mut tree = Pane::new_split(layout::Direction::Horizontal);
+
+        tree.cycle_image(&[true], 3, AdjustDirection::Forward)
+            .unwrap();
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Leaf { image_id: 1 }
+        ));
+
+        tree.cycle_image(&[true], 3, AdjustDirection::Forward)
+            .unwrap();
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Leaf { image_id: 2 }
+        ));
+
+        tree.cycle_image(&[true], 3, AdjustDirection::Forward)
+            .unwrap();
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Leaf { image_id: 0 }
+        ));
+
+        tree.cycle_image(&[true], 3, AdjustDirection::Backward)
+            .unwrap();
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Leaf { image_id: 2 }
+        ));
+
+        tree.cycle_image(&[true], 3, AdjustDirection::Backward)
+            .unwrap();
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Leaf { image_id: 1 }
+        ));
+
+        tree.cycle_image(&[true], 3, AdjustDirection::Backward)
+            .unwrap();
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Leaf { image_id: 0 }
         ));
     }
 }
