@@ -163,29 +163,29 @@ impl Pane {
         direction: layout::Direction,
         delta: i8,
     ) -> eyre::Result<()> {
-        match self.get_node_at(path)? {
-            Pane::Split { .. } => Err(eyre::eyre!(
-                "Resizing an entire split directly is not allowed"
-            )),
-            Pane::Leaf { .. } => {
-                let (parent_path, _) = match path.split_at_checked(path.len().saturating_sub(1)) {
-                    Some(val) => val,
-                    _ => {
-                        return Ok(());
-                    }
-                };
-                if let Pane::Split {
-                    direction: splitdir,
-                    pct,
-                    ..
-                } = self.get_node_at_mut(parent_path)?
-                    && *splitdir == direction
-                {
-                    *pct = (*pct as i8 + delta).clamp(5, 95) as u8;
-                }
-                Ok(())
+        if path.is_empty() {
+            return Ok(());
+        }
+        let (parent_path, _) = match path.split_at_checked(path.len().saturating_sub(1)) {
+            Some(val) => val,
+            _ => {
+                return Ok(());
+            }
+        };
+        let parent_node = self.get_node_at_mut(parent_path)?;
+        if let Pane::Split {
+            direction: splitdir,
+            pct,
+            ..
+        } = parent_node
+        {
+            if *splitdir == direction {
+                *pct = (*pct as i8 + delta).clamp(5, 95) as u8;
+            } else {
+                self.resize_leaf_at(parent_path, direction, delta)?;
             }
         }
+        Ok(())
     }
 }
 
@@ -582,11 +582,73 @@ mod tests {
         ))
     }
 
-    // Disallowed to resize an entire split directly
     #[test]
-    fn test_err_resize_split_node() {
-        let mut tree = Pane::new_split(layout::Direction::Horizontal);
-        let result = tree.resize_leaf_at(&[], layout::Direction::Horizontal, 10);
-        assert!(result.is_err());
+    fn test_hresize_leaf_under_hv_split_root() {
+        let mut tree = Pane::Split {
+            direction: layout::Direction::Horizontal,
+            pct: 50,
+            first: Box::new(Pane::Split {
+                direction: layout::Direction::Vertical,
+                pct: 50,
+                first: Box::new(Pane::new_leaf()),
+                second: Box::new(Pane::new_leaf()),
+            }),
+            second: Box::new(Pane::new_leaf()),
+        };
+
+        tree.resize_leaf_at(&[true, true], layout::Direction::Horizontal, 10)
+            .unwrap();
+
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Split {
+                direction: layout::Direction::Vertical,
+                pct: 50, // this is a vsplit so should not be resized
+                ..
+            }
+        ));
+        assert!(matches!(
+            tree.get_node_at(&[]).unwrap(),
+            Pane::Split {
+                direction: layout::Direction::Horizontal,
+                pct: 60, // this is the nearest parent hsplit so we resize this
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn test_hresize_leaf_under_hh_split_root() {
+        let mut tree = Pane::Split {
+            direction: layout::Direction::Horizontal,
+            pct: 50,
+            first: Box::new(Pane::Split {
+                direction: layout::Direction::Horizontal,
+                pct: 50,
+                first: Box::new(Pane::new_leaf()),
+                second: Box::new(Pane::new_leaf()),
+            }),
+            second: Box::new(Pane::new_leaf()),
+        };
+
+        tree.resize_leaf_at(&[true, true], layout::Direction::Horizontal, 10)
+            .unwrap();
+
+        assert!(matches!(
+            tree.get_node_at(&[true]).unwrap(),
+            Pane::Split {
+                direction: layout::Direction::Horizontal,
+                pct: 60, // this is the nearest parent hsplit so we resize this
+                ..
+            }
+        ));
+        assert!(matches!(
+            tree.get_node_at(&[]).unwrap(),
+            Pane::Split {
+                direction: layout::Direction::Horizontal,
+                pct: 50, // a child split was already resized, so we keep this
+                ..
+            }
+        ));
     }
 }
