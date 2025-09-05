@@ -154,6 +154,15 @@ impl Pane {
             .ok_or_eyre("Could not find cycled path")?;
         Ok(cycled_path.clone())
     }
+
+    pub fn resize_leaf_at(
+        &mut self,
+        _path: &[bool],
+        _direction: layout::Direction,
+        _delta: i8,
+    ) -> eyre::Result<()> {
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -506,5 +515,16 @@ mod tests {
 
         let result = tree.cycle(&[true], AdjustDirection::Forward);
         assert!(result.is_err());
+    }
+
+    // Resize root_leaf
+    #[test]
+    fn test_resize_root_leaf() {
+        let mut tree = Pane::new_leaf();
+
+        tree.resize_leaf_at(&[], layout::Direction::Vertical, 5)
+            .unwrap();
+
+        assert!(matches!(tree, Pane::Leaf { .. }));
     }
 }
