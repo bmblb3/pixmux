@@ -543,7 +543,7 @@ mod tests {
 
     // Resize
     #[test]
-    fn test_resize_root_leaf() {
+    fn test_redundant_resize_root_leaf() {
         let mut tree = Pane::new_leaf();
 
         tree.resize_leaf_at(&[], layout::Direction::Vertical, 5)
@@ -553,7 +553,7 @@ mod tests {
     }
 
     #[test]
-    fn test_redundant_resize_leaf_under_horizontally_stacked_split() {
+    fn test_redundant_vresize_leaf_under_horizontally_stacked_split_root() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
         tree.resize_leaf_at(&[true], layout::Direction::Vertical, 10)
             .unwrap();
@@ -568,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    fn test_resize_leaf_under_horizontally_stacked_split() {
+    fn test_hresize_leaf_under_horizontally_stacked_split_root() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
         tree.resize_leaf_at(&[true], layout::Direction::Horizontal, 10)
             .unwrap();
