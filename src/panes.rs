@@ -498,4 +498,13 @@ mod tests {
             vec![false, false, true]
         );
     }
+
+    // Cycle fails when invalid path is provided
+    #[test]
+    fn test_cycle_invalid_leaf() {
+        let tree = Pane::new_leaf();
+
+        let result = tree.cycle(&[true], AdjustDirection::Forward);
+        assert!(result.is_err());
+    }
 }
