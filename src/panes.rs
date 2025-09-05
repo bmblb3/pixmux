@@ -284,11 +284,11 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_leaf();
-            let first_new = tree.split_leaf_at(&[], direction).unwrap();
+            let first_created_path = tree.split_leaf_at(&[], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(paths, vec![vec![true], vec![false]]);
-            assert_eq!(first_new, vec![true]);
+            assert_eq!(first_created_path, vec![true]);
             assert!(matches!(
                 tree.get_node_at(&[]).unwrap(),
                 &Pane::Split {
@@ -305,14 +305,14 @@ mod tests {
 
         for direction in directions {
             let mut tree = Pane::new_split(layout::Direction::Horizontal);
-            let first_new = tree.split_leaf_at(&[true], direction).unwrap();
+            let first_created_path = tree.split_leaf_at(&[true], direction).unwrap();
 
             let paths = tree.collect_leaf_paths();
             assert_eq!(
                 paths,
                 vec![vec![true, true], vec![true, false], vec![false]]
             );
-            assert_eq!(first_new, vec![true, true]);
+            assert_eq!(first_created_path, vec![true, true]);
             assert!(matches!(
                 tree.get_node_at(&[true]).unwrap(),
                 &Pane::Split {
@@ -361,9 +361,9 @@ mod tests {
                 first: Box::new(Pane::Leaf { image_id: 1 }),
                 second: Box::new(Pane::Leaf { image_id: 2 }),
             };
-            let sibling = tree.remove_leaf_at(&[remove_child]).unwrap();
+            let promoted_sibling_path = tree.remove_leaf_at(&[remove_child]).unwrap();
 
-            assert_eq!(sibling, vec![]);
+            assert_eq!(promoted_sibling_path, vec![]);
             assert!(matches!(tree, Pane::Leaf { image_id: e } if e==expected));
         }
     }
@@ -377,19 +377,19 @@ mod tests {
             second: Box::new(Pane::new_leaf()),
         };
 
-        let sibling = tree.remove_leaf_at(&[true, false]).unwrap();
+        let promoted_sibling_path = tree.remove_leaf_at(&[true, false]).unwrap();
         let paths = tree.collect_leaf_paths();
 
-        assert_eq!(sibling, vec![true]);
+        assert_eq!(promoted_sibling_path, vec![true]);
         assert_eq!(paths, vec![vec![true], vec![false]]);
     }
 
     #[test]
     fn test_remove_root_node() {
         let mut tree = Pane::Leaf { image_id: 1 };
-        let sibling = tree.remove_leaf_at(&[]).unwrap();
+        let promoted_sibling_path = tree.remove_leaf_at(&[]).unwrap();
 
-        assert_eq!(sibling, vec![]);
+        assert_eq!(promoted_sibling_path, vec![]);
         assert!(matches!(tree, Pane::Leaf { image_id: 0 }));
     }
 
