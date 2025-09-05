@@ -14,6 +14,12 @@ pub enum Pane {
     },
 }
 
+impl Default for Pane {
+    fn default() -> Self {
+        Pane::new_leaf()
+    }
+}
+
 macro_rules! impl_get_node_at {
     ($self:ident, $path:ident, $method:ident) => {
         if $path.is_empty() {
@@ -89,7 +95,9 @@ impl Pane {
         match pane {
             Pane::Leaf { .. } => {
                 *pane = Self::new_split(direction);
-                Ok([path, &[true]].concat())
+                let mut result = path.to_vec();
+                result.push(true);
+                Ok(result)
             }
             Pane::Split { .. } => Err(eyre::eyre!("Can only split a leaf node")),
         }
@@ -116,20 +124,19 @@ impl Pane {
 
         let parent = self.get_node_at_mut(&parent_path)?;
 
-        let sibling = match parent {
+        match parent {
             Pane::Leaf { .. } => {
                 return Err(eyre::eyre!("Parent does not seem to be a split node!"));
             }
             Pane::Split { first, second, .. } => {
-                if removing_first_child {
-                    &**second
+                let sibling = if removing_first_child {
+                    std::mem::take(second)
                 } else {
-                    &**first
-                }
+                    std::mem::take(first)
+                };
+                *parent = *sibling;
             }
         };
-
-        *parent = (sibling).clone();
         Ok(parent_path)
     }
 }
