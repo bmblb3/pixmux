@@ -3,9 +3,9 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, Tabs};
 
+use super::ImageLayout;
 use crate::App;
 use crate::data_table::DataTable;
-use crate::image_layout::ImageLayout;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Tab {
