@@ -6,9 +6,9 @@ use ratatui::widgets::{Block, Tabs};
 use super::{ImageLayout, TableUI};
 use crate::App;
 
-pub struct TabUI;
+pub struct NavBarUI;
 
-impl TabUI {
+impl NavBarUI {
     pub fn render_navbar(frame: &mut ratatui::Frame, area: ratatui::layout::Rect, app: &App) {
         let tabs = Tabs::new(pixmux::Tab::titles())
             .block(Block::bordered())

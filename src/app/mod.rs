@@ -55,8 +55,8 @@ impl App {
             .constraints([Constraint::Length(3), Constraint::Min(0)])
             .split(frame.area());
 
-        ui::TabUI::render_navbar(frame, chunks[0], self);
-        ui::TabUI::render(frame, chunks[1], self);
+        ui::NavBarUI::render_navbar(frame, chunks[0], self);
+        ui::NavBarUI::render(frame, chunks[1], self);
     }
 
     pub fn get_basename(&self, index: &usize) -> Option<String> {

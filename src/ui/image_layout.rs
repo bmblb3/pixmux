@@ -9,7 +9,6 @@ use ratatui_image::{StatefulImage, picker};
 
 use crate::app::App;
 
-#[derive(Default)]
 pub struct ImageLayout;
 
 impl ImageLayout {
