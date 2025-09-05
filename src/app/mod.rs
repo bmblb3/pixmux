@@ -15,6 +15,7 @@ pub struct App {
     pub col_headers: Vec<String>,
     pub table_rows: Vec<Vec<String>>,
     pub imagedir_paths: Vec<std::path::PathBuf>,
+    pub imagefile_basenames: Vec<String>,
     pub current_tab: Tab,
     pub current_datarow_index: usize,
     pub pane_tree: pixmux::Pane,
@@ -29,6 +30,7 @@ impl App {
             col_headers,
             table_rows,
             imagedir_paths: imgdir_paths,
+            imagefile_basenames: vec![],
             current_tab: Tab::default(),
             current_datarow_index: 0,
             pane_tree: Pane::default(),
@@ -68,7 +70,7 @@ impl App {
     }
 
     pub fn get_basename(&self, index: &usize) -> Option<String> {
-        pixmux::collect_imgfile_basenames(&self.imagedir_paths)
+        pixmux::collect_imagefile_basenames(&self.imagedir_paths)
             .get(*index)
             .cloned()
     }
