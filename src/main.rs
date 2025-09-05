@@ -3,7 +3,6 @@ use clap::Parser as _;
 use color_eyre::Result;
 
 mod app;
-mod data_table;
 mod ui;
 
 use app::App;
