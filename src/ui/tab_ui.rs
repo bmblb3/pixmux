@@ -3,7 +3,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, Tabs};
 
-use super::{DataTable, ImageLayout};
+use super::{ImageLayout, TableUI};
 use crate::App;
 
 pub struct TabUI;
@@ -20,7 +20,7 @@ impl TabUI {
     pub fn render(frame: &mut Frame, area: Rect, app: &App) {
         match app.current_tab {
             pixmux::Tab::Data => {
-                frame.render_widget(DataTable::create_widget(app), area);
+                frame.render_widget(TableUI::create_widget(app), area);
             }
             pixmux::Tab::Image => {
                 ImageLayout::render(frame, area, app);

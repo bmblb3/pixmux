@@ -4,10 +4,9 @@ use ratatui::widgets::{Block, Borders, Cell, Row, Table};
 
 use crate::App;
 
-#[derive(Default)]
-pub struct DataTable;
+pub struct TableUI;
 
-impl DataTable {
+impl TableUI {
     pub fn create_widget(app: &App) -> Table<'static> {
         let collen = app.col_headers.len();
         let constraints = vec![Constraint::Length(20); collen];
