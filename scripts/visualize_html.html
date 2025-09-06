@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Binary Tree</title>
+    </head>
+    <body>
+        <canvas id="canvas" width="1600" height="400"></canvas>
+        <button onclick="getAllPaths()">Get All Paths</button>
+        <div id="output"></div>
+        <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      class Node {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.left = null;
+          this.right = null;
+          this.radius = 10;
+        }
+      }
+
+      let root = new Node(600, 25);
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawNode(root);
+      }
+
+      function drawNode(node) {
+        if (!node) return;
+
+        // Draw lines to children
+        if (node.left) {
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(node.left.x, node.left.y);
+          ctx.stroke();
+          drawNode(node.left);
+        }
+        if (node.right) {
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(node.right.x, node.right.y);
+          ctx.stroke();
+          drawNode(node.right);
+        }
+
+        // Draw node
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      function findNode(x, y, node) {
+        if (!node) return null;
+
+        const dx = x - node.x;
+        const dy = y - node.y;
+        if (dx * dx + dy * dy <= node.radius * node.radius) {
+          return node;
+        }
+
+        return findNode(x, y, node.left) || findNode(x, y, node.right);
+      }
+
+      function addChildren(node) {
+        if (node.left || node.right) return;
+
+        const depth = getDepth(node);
+        const spacing = Math.max(20, 240 / Math.pow(2, depth));
+
+        const leftX = node.x - spacing;
+        const rightX = node.x + spacing;
+        const childY = node.y + 60;
+
+        node.left = new Node(leftX, childY);
+        node.right = new Node(rightX, childY);
+      }
+
+      function getDepth(targetNode) {
+        function findDepth(node, target, currentDepth) {
+          if (!node) return -1;
+          if (node === target) return currentDepth;
+
+          const leftDepth = findDepth(node.left, target, currentDepth + 1);
+          if (leftDepth !== -1) return leftDepth;
+
+          return findDepth(node.right, target, currentDepth + 1);
+        }
+        return findDepth(root, targetNode, 0);
+      }
+
+      function deleteNode(nodeToDelete, parent, isLeft) {
+        if (nodeToDelete === root) {
+          root = new Node(600, 25);
+        } else if (parent) {
+          const sibling = isLeft ? parent.right : parent.left;
+          const grandparent = findParent(parent, root, null);
+
+          if (grandparent && grandparent.parent) {
+            if (grandparent.isLeft) {
+              grandparent.parent.left = sibling;
+            } else {
+              grandparent.parent.right = sibling;
+            }
+          } else if (parent === root) {
+            root = sibling;
+          }
+
+          if (sibling) {
+            sibling.x = parent.x;
+            sibling.y = parent.y;
+          }
+        }
+      }
+
+      function findParent(target, current, parent) {
+        if (!current) return null;
+        if (current === target)
+          return { parent, isLeft: parent && parent.left === current };
+
+        const leftResult = findParent(target, current.left, current);
+        if (leftResult) return leftResult;
+
+        return findParent(target, current.right, current);
+      }
+
+      function getPath(node) {
+        if (node === root) return "";
+
+        const parentInfo = findParent(node, root, null);
+        if (!parentInfo || !parentInfo.parent) return "";
+
+        const parentPath = getPath(parentInfo.parent);
+        return parentPath + (parentInfo.isLeft ? "true" : "false");
+      }
+
+      function getAllPathsHelper(node, currentPath, paths) {
+        if (!node) return;
+
+        if (!node.left && !node.right) {
+          paths.push(currentPath);
+          return;
+        }
+
+        if (node.left) {
+          getAllPathsHelper(node.left, currentPath + "true", paths);
+        }
+        if (node.right) {
+          getAllPathsHelper(node.right, currentPath + "false", paths);
+        }
+      }
+
+      function getAllPaths() {
+        const paths = [];
+        if (!root.left && !root.right) {
+          paths.push("");
+        } else {
+          getAllPathsHelper(root, "", paths);
+        }
+        const formattedPaths = paths
+          .map((path) => {
+            if (path === "") return "[]";
+            const pathArray = [];
+            let i = 0;
+            while (i < path.length) {
+              if (path.substr(i, 4) === "true") {
+                pathArray.push("true");
+                i += 4;
+              } else if (path.substr(i, 5) === "false") {
+                pathArray.push("false");
+                i += 5;
+              } else {
+                i++;
+              }
+            }
+            return "[" + pathArray.join(", ") + "]";
+          })
+          .join(", ");
+        document.getElementById("output").innerHTML = `[${formattedPaths}]`;
+      }
+
+      canvas.addEventListener("click", function (e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const node = findNode(x, y, root);
+        if (node) {
+          const path = getPath(node);
+          if (path === "") {
+            document.getElementById("output").innerHTML = "Path: []";
+          } else {
+            const pathArray = [];
+            let i = 0;
+            while (i < path.length) {
+              if (path.substr(i, 4) === "true") {
+                pathArray.push("true");
+                i += 4;
+              } else if (path.substr(i, 5) === "false") {
+                pathArray.push("false");
+                i += 5;
+              } else {
+                i++;
+              }
+            }
+            document.getElementById("output").innerHTML =
+              "Path: [" + pathArray.join(", ") + "]";
+          }
+        }
+      });
+
+      canvas.addEventListener("dblclick", function (e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const node = findNode(x, y, root);
+        if (node) {
+          addChildren(node);
+          draw();
+        }
+      });
+
+      canvas.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const node = findNode(x, y, root);
+        if (node && !node.left && !node.right) {
+          const parentInfo = findParent(node, root, null);
+          deleteNode(node, parentInfo?.parent, parentInfo?.isLeft);
+          draw();
+        }
+      });
+
+      draw();
+        </script>
+    </body>
+</html>
