@@ -8,30 +8,29 @@ pub enum BTreeNode<L = (), B = ()> {
 }
 
 impl<L, B> BTreeNode<L, B> {
-    pub fn get_paths(&self) -> Vec<Vec<bool>> {
-        match self {
-            BTreeNode::Leaf(_) => vec![vec![]],
-            BTreeNode::Branch { .. } => {
-                let mut all_paths = Vec::new();
-                let mut current_path = Vec::new();
-                Self::get_paths_impl(self, &mut current_path, &mut all_paths);
-                all_paths
-            }
-        }
+    pub fn collect_paths(&self) -> Vec<Vec<bool>> {
+        let mut all_paths = Vec::new();
+        let mut current_path = Vec::new();
+        Self::collect_paths_impl(self, &mut current_path, &mut all_paths);
+        all_paths
     }
 
-    fn get_paths_impl(node: &Self, current_path: &mut Vec<bool>, all_paths: &mut Vec<Vec<bool>>) {
+    fn collect_paths_impl(
+        node: &Self,
+        current_path: &mut Vec<bool>,
+        all_paths: &mut Vec<Vec<bool>>,
+    ) {
         match node {
             Self::Leaf(_) => {
                 all_paths.push(current_path.to_vec());
             }
             Self::Branch { first, second, .. } => {
                 current_path.push(true);
-                Self::get_paths_impl(first, current_path, all_paths);
+                Self::collect_paths_impl(first, current_path, all_paths);
                 current_path.pop();
 
                 current_path.push(false);
-                Self::get_paths_impl(second, current_path, all_paths);
+                Self::collect_paths_impl(second, current_path, all_paths);
                 current_path.pop();
             }
         }
@@ -49,7 +48,7 @@ mod tests {
         type TestConcreteBTree = BTreeNode<i8, ()>;
         let tree = TestConcreteBTree::Leaf(42);
 
-        let paths = tree.get_paths();
+        let paths = tree.collect_paths();
 
         assert_eq!(paths, [[]]);
     }
@@ -63,7 +62,7 @@ mod tests {
             data: 42,
         };
 
-        let paths = tree.get_paths();
+        let paths = tree.collect_paths();
 
         assert_eq!(paths, [[true], [false]]);
     }
@@ -86,12 +85,12 @@ mod tests {
     fn test_btree_returns_computed_paths() {
         let test_cases = [
             (
-                // Leaf at root
+                // leaf at root
                 TestBTree::Leaf(()),
                 vec![vec![]],
             ),
             (
-                // Simple branch at root
+                // simple branch at root
                 TestBTree::Branch {
                     first: Box::new(BTreeNode::Leaf(())),
                     second: Box::new(BTreeNode::Leaf(())),
@@ -131,7 +130,7 @@ mod tests {
         ];
 
         for (tree, expected) in test_cases {
-            let paths = tree.get_paths();
+            let paths = tree.collect_paths();
             assert_eq!(paths, expected);
         }
     }
