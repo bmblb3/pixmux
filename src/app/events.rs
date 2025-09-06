@@ -30,14 +30,14 @@ impl App {
                 self.current_datarow_index = pixmux::step_index(
                     self.current_datarow_index,
                     self.table_rows.len(),
-                    pixmux::AdjustDirection::Backward,
+                    pixmux::AdjustDirection::Previous,
                 )
             }
             (KeyModifiers::NONE, KeyCode::Down) => {
                 self.current_datarow_index = pixmux::step_index(
                     self.current_datarow_index,
                     self.table_rows.len(),
-                    pixmux::AdjustDirection::Forward,
+                    pixmux::AdjustDirection::Next,
                 )
             }
 
@@ -49,7 +49,7 @@ impl App {
                         .navigate(
                             &self.current_pane_path,
                             layout::Direction::Horizontal,
-                            pixmux::AdjustDirection::Backward,
+                            pixmux::AdjustDirection::Previous,
                         )
                         .unwrap();
                 }
@@ -62,7 +62,7 @@ impl App {
                         .navigate(
                             &self.current_pane_path,
                             layout::Direction::Vertical,
-                            pixmux::AdjustDirection::Forward,
+                            pixmux::AdjustDirection::Next,
                         )
                         .unwrap();
                 }
@@ -75,7 +75,7 @@ impl App {
                         .navigate(
                             &self.current_pane_path,
                             layout::Direction::Vertical,
-                            pixmux::AdjustDirection::Backward,
+                            pixmux::AdjustDirection::Previous,
                         )
                         .unwrap();
                 }
@@ -88,7 +88,7 @@ impl App {
                         .navigate(
                             &self.current_pane_path,
                             layout::Direction::Horizontal,
-                            pixmux::AdjustDirection::Forward,
+                            pixmux::AdjustDirection::Next,
                         )
                         .unwrap();
                 }
@@ -167,7 +167,7 @@ impl App {
                     .cycle_image(
                         &self.current_pane_path,
                         self.imagefile_basenames.len(),
-                        AdjustDirection::Forward,
+                        AdjustDirection::Next,
                     )
                     .unwrap(),
                 Tab::Data => {}
@@ -178,7 +178,7 @@ impl App {
                     .cycle_image(
                         &self.current_pane_path,
                         self.imagefile_basenames.len(),
-                        AdjustDirection::Backward,
+                        AdjustDirection::Previous,
                     )
                     .unwrap(),
                 Tab::Data => {}
