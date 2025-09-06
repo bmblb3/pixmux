@@ -32,6 +32,7 @@
               cargo-release
               cargo-semver-checks
               release-plz
+              cargo-audit
             ];
           };
       }
