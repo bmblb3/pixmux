@@ -129,9 +129,7 @@ impl Pane {
         let parent = self.get_node_at_mut(&parent_path)?;
 
         match parent {
-            Pane::Leaf { .. } => {
-                return Err(eyre::eyre!("Parent does not seem to be a split node!"));
-            }
+            Pane::Leaf { .. } => Err(eyre::eyre!("Parent does not seem to be a split node!")),
             Pane::Split { first, second, .. } => {
                 let sibling = if removing_first_child {
                     std::mem::take(second)
@@ -139,21 +137,11 @@ impl Pane {
                     std::mem::take(first)
                 };
                 *parent = *sibling;
+                match parent {
+                    Pane::Leaf { .. } => Ok(parent_path),
+                    Pane::Split { .. } => Ok(path.to_vec()),
+                }
             }
-        };
-
-        Ok(self.get_first_leaf_path(parent_path)?)
-    }
-
-    fn get_first_leaf_path(&self, path: Vec<bool>) -> eyre::Result<Vec<bool>> {
-        let all_leaf_paths = self.collect_leaf_paths();
-        if all_leaf_paths.contains(&path) {
-            Ok(path)
-        } else {
-            let first_path = [path.clone(), vec![true]].concat();
-            let second_path = [path, vec![false]].concat();
-            self.get_first_leaf_path(first_path)
-                .or_else(|_| self.get_first_leaf_path(second_path))
         }
     }
 
@@ -533,6 +521,20 @@ mod tests {
 
         let promoted_sibling_path = tree.remove_leaf_at(&[true]).unwrap();
         assert_eq!(promoted_sibling_path, vec![true]);
+        assert!(matches!(tree, Pane::Split { .. }));
+    }
+
+    #[test]
+    fn test_remove_leaf_sibling_of_a_split_other_side() {
+        let mut tree = Pane::Split {
+            direction: layout::Direction::Vertical,
+            pct: 50,
+            first: Box::new(Pane::new_split(layout::Direction::Horizontal)),
+            second: Box::new(Pane::new_leaf()),
+        };
+
+        let promoted_sibling_path = tree.remove_leaf_at(&[false]).unwrap();
+        assert_eq!(promoted_sibling_path, vec![false]);
         assert!(matches!(tree, Pane::Split { .. }));
     }
 
