@@ -141,7 +141,20 @@ impl Pane {
                 *parent = *sibling;
             }
         };
-        Ok(parent_path)
+
+        Ok(self.get_first_leaf_path(parent_path)?)
+    }
+
+    fn get_first_leaf_path(&self, path: Vec<bool>) -> eyre::Result<Vec<bool>> {
+        let all_leaf_paths = self.collect_leaf_paths();
+        if all_leaf_paths.contains(&path) {
+            Ok(path)
+        } else {
+            let first_path = [path.clone(), vec![true]].concat();
+            let second_path = [path, vec![false]].concat();
+            self.get_first_leaf_path(first_path)
+                .or_else(|_| self.get_first_leaf_path(second_path))
+        }
     }
 
     pub fn cycle(&self, path: &[bool], direction: AdjustDirection) -> eyre::Result<Vec<bool>> {
@@ -507,6 +520,20 @@ mod tests {
 
         assert_eq!(promoted_sibling_path, vec![]);
         assert!(matches!(tree, Pane::Leaf { image_id: 0 }));
+    }
+
+    #[test]
+    fn test_remove_leaf_sibling_of_a_split() {
+        let mut tree = Pane::Split {
+            direction: layout::Direction::Vertical,
+            pct: 50,
+            first: Box::new(Pane::new_leaf()),
+            second: Box::new(Pane::new_split(layout::Direction::Horizontal)),
+        };
+
+        let promoted_sibling_path = tree.remove_leaf_at(&[true]).unwrap();
+        assert_eq!(promoted_sibling_path, vec![true]);
+        assert!(matches!(tree, Pane::Split { .. }));
     }
 
     // Removal fails because
