@@ -1,4 +1,5 @@
 pub mod adjust_index;
+pub mod btree;
 pub mod imagefile;
 pub mod panes;
 pub mod parse_csv;
