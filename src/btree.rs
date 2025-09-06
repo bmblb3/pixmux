@@ -45,15 +45,6 @@ mod tests {
     type TestBTree = BTreeNode<(), ()>;
 
     #[test]
-    fn test_btree_with_leaf_at_root_returns_computed_paths() {
-        let tree = TestBTree::Leaf(());
-
-        let paths = tree.get_paths();
-
-        assert_eq!(paths, [[]]);
-    }
-
-    #[test]
     fn test_btree_with_leaf_at_root_with_data_returns_computed_paths() {
         type TestConcreteBTree = BTreeNode<i8, ()>;
         let tree = TestConcreteBTree::Leaf(42);
@@ -61,19 +52,6 @@ mod tests {
         let paths = tree.get_paths();
 
         assert_eq!(paths, [[]]);
-    }
-
-    #[test]
-    fn test_btree_with_simple_branch_at_root_returns_computed_paths() {
-        let tree = TestBTree::Branch {
-            first: Box::new(BTreeNode::Leaf(())),
-            second: Box::new(BTreeNode::Leaf(())),
-            data: (),
-        };
-
-        let paths = tree.get_paths();
-
-        assert_eq!(paths, [[true], [false]]);
     }
 
     #[test]
@@ -105,26 +83,56 @@ mod tests {
     }
 
     #[test]
-    fn test_btree_with_first_heavy_branch_returns_computed_paths() {
-        let tree = TestBTree::new_branch(
-            TestBTree::new_branch(TestBTree::new_leaf(), TestBTree::new_leaf()),
-            TestBTree::new_leaf(),
-        );
+    fn test_btree_returns_computed_paths() {
+        let test_cases = [
+            (
+                // Leaf at root
+                TestBTree::Leaf(()),
+                vec![vec![]],
+            ),
+            (
+                // Simple branch at root
+                TestBTree::Branch {
+                    first: Box::new(BTreeNode::Leaf(())),
+                    second: Box::new(BTreeNode::Leaf(())),
+                    data: (),
+                },
+                vec![vec![true], vec![false]],
+            ),
+            (
+                // first heavy tree
+                TestBTree::new_branch(
+                    TestBTree::new_branch(TestBTree::new_leaf(), TestBTree::new_leaf()),
+                    TestBTree::new_leaf(),
+                ),
+                vec![vec![true, true], vec![true, false], vec![false]],
+            ),
+            (
+                // second heavy tree
+                TestBTree::new_branch(
+                    TestBTree::new_leaf(),
+                    TestBTree::new_branch(TestBTree::new_leaf(), TestBTree::new_leaf()),
+                ),
+                vec![vec![true], vec![false, true], vec![false, false]],
+            ),
+            (
+                // two splits at root
+                TestBTree::new_branch(
+                    TestBTree::new_branch(TestBTree::new_leaf(), TestBTree::new_leaf()),
+                    TestBTree::new_branch(TestBTree::new_leaf(), TestBTree::new_leaf()),
+                ),
+                vec![
+                    vec![true, true],
+                    vec![true, false],
+                    vec![false, true],
+                    vec![false, false],
+                ],
+            ),
+        ];
 
-        let paths = tree.get_paths();
-
-        assert_eq!(paths, [vec![true, true], vec![true, false], vec![false]]);
-    }
-
-    #[test]
-    fn test_btree_with_second_heavy_branch_returns_computed_paths() {
-        let tree = TestBTree::new_branch(
-            TestBTree::new_leaf(),
-            TestBTree::new_branch(TestBTree::new_leaf(), TestBTree::new_leaf()),
-        );
-
-        let paths = tree.get_paths();
-
-        assert_eq!(paths, [vec![true], vec![false, true], vec![false, false]]);
+        for (tree, expected) in test_cases {
+            let paths = tree.get_paths();
+            assert_eq!(paths, expected);
+        }
     }
 }
