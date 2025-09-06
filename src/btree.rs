@@ -115,4 +115,16 @@ mod tests {
 
         assert_eq!(paths, [vec![true, true], vec![true, false], vec![false]]);
     }
+
+    #[test]
+    fn test_btree_with_second_heavy_branch_returns_computed_paths() {
+        let tree = TestBTree::new_branch(
+            TestBTree::new_leaf(),
+            TestBTree::new_branch(TestBTree::new_leaf(), TestBTree::new_leaf()),
+        );
+
+        let paths = tree.get_paths();
+
+        assert_eq!(paths, [vec![true], vec![false, true], vec![false, false]]);
+    }
 }
