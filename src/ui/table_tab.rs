@@ -1,15 +1,12 @@
-use ratatui::{
-    layout::Constraint,
-    style::Stylize,
-    widgets::{Block, Borders, Cell, Row, Table},
-};
+use ratatui::layout::Constraint;
+use ratatui::style::Stylize;
+use ratatui::widgets::{Block, Borders, Cell, Row, Table};
 
 use crate::App;
 
-#[derive(Default)]
-pub struct DataTable;
+pub struct TableTabUI;
 
-impl DataTable {
+impl TableTabUI {
     pub fn create_widget(app: &App) -> Table<'static> {
         let collen = app.col_headers.len();
         let constraints = vec![Constraint::Length(20); collen];
@@ -24,7 +21,7 @@ impl DataTable {
                     .map(|cell| Cell::from(cell.clone()))
                     .collect::<Vec<_>>();
                 let mut table_row = Row::new(row_cells);
-                if index == app.current_row_index {
+                if index == app.current_datarow_index {
                     table_row = table_row.reversed();
                 }
                 table_row
