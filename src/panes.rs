@@ -225,8 +225,8 @@ impl Pane {
         let nextiter = next.iter().collect::<Vec<_>>();
 
         let search_array = match adjust_direction {
-            AdjustDirection::Forward => nextiter,
-            AdjustDirection::Backward => previter,
+            AdjustDirection::Next => nextiter,
+            AdjustDirection::Previous => previter,
         };
 
         for candidate in search_array {
@@ -560,10 +560,10 @@ mod tests {
     fn test_cycle_root_leaf() {
         let tree = Pane::new_leaf();
 
-        let next = tree.cycle(&[], AdjustDirection::Forward).unwrap();
+        let next = tree.cycle(&[], AdjustDirection::Next).unwrap();
         assert_eq!(next, vec![]);
 
-        let prev = tree.cycle(&[], AdjustDirection::Backward).unwrap();
+        let prev = tree.cycle(&[], AdjustDirection::Previous).unwrap();
         assert_eq!(prev, vec![]);
     }
 
@@ -571,16 +571,16 @@ mod tests {
     fn test_cycle_nested_leaf() {
         let tree = Pane::new_split(layout::Direction::Horizontal);
 
-        let next = tree.cycle(&[true], AdjustDirection::Forward).unwrap();
+        let next = tree.cycle(&[true], AdjustDirection::Next).unwrap();
         assert_eq!(next, vec![false]);
 
-        let next = tree.cycle(&[false], AdjustDirection::Forward).unwrap();
+        let next = tree.cycle(&[false], AdjustDirection::Next).unwrap();
         assert_eq!(next, vec![true]);
 
-        let prev = tree.cycle(&[true], AdjustDirection::Backward).unwrap();
+        let prev = tree.cycle(&[true], AdjustDirection::Previous).unwrap();
         assert_eq!(prev, vec![false]);
 
-        let prev = tree.cycle(&[false], AdjustDirection::Backward).unwrap();
+        let prev = tree.cycle(&[false], AdjustDirection::Previous).unwrap();
         assert_eq!(prev, vec![true]);
     }
 
@@ -599,23 +599,23 @@ mod tests {
         };
 
         assert_eq!(
-            tree.cycle(&[true], AdjustDirection::Forward).unwrap(),
+            tree.cycle(&[true], AdjustDirection::Next).unwrap(),
             vec![false, true]
         );
 
         assert_eq!(
-            tree.cycle(&[false, false, false], AdjustDirection::Forward)
+            tree.cycle(&[false, false, false], AdjustDirection::Next)
                 .unwrap(),
             vec![true]
         );
 
         assert_eq!(
-            tree.cycle(&[true], AdjustDirection::Backward).unwrap(),
+            tree.cycle(&[true], AdjustDirection::Previous).unwrap(),
             vec![false, false, false]
         );
 
         assert_eq!(
-            tree.cycle(&[false, false, false], AdjustDirection::Backward)
+            tree.cycle(&[false, false, false], AdjustDirection::Previous)
                 .unwrap(),
             vec![false, false, true]
         );
@@ -626,7 +626,7 @@ mod tests {
     fn test_cycle_invalid_leaf() {
         let tree = Pane::new_leaf();
 
-        let result = tree.cycle(&[true], AdjustDirection::Forward);
+        let result = tree.cycle(&[true], AdjustDirection::Next);
         assert!(result.is_err());
     }
 
@@ -746,42 +746,39 @@ mod tests {
     fn test_cycle_image_id() {
         let mut tree = Pane::new_split(layout::Direction::Horizontal);
 
-        tree.cycle_image(&[true], 3, AdjustDirection::Forward)
-            .unwrap();
+        tree.cycle_image(&[true], 3, AdjustDirection::Next).unwrap();
         assert!(matches!(
             tree.get_node_at(&[true]).unwrap(),
             Pane::Leaf { image_id: 1 }
         ));
 
-        tree.cycle_image(&[true], 3, AdjustDirection::Forward)
-            .unwrap();
+        tree.cycle_image(&[true], 3, AdjustDirection::Next).unwrap();
         assert!(matches!(
             tree.get_node_at(&[true]).unwrap(),
             Pane::Leaf { image_id: 2 }
         ));
 
-        tree.cycle_image(&[true], 3, AdjustDirection::Forward)
-            .unwrap();
+        tree.cycle_image(&[true], 3, AdjustDirection::Next).unwrap();
         assert!(matches!(
             tree.get_node_at(&[true]).unwrap(),
             Pane::Leaf { image_id: 0 }
         ));
 
-        tree.cycle_image(&[true], 3, AdjustDirection::Backward)
+        tree.cycle_image(&[true], 3, AdjustDirection::Previous)
             .unwrap();
         assert!(matches!(
             tree.get_node_at(&[true]).unwrap(),
             Pane::Leaf { image_id: 2 }
         ));
 
-        tree.cycle_image(&[true], 3, AdjustDirection::Backward)
+        tree.cycle_image(&[true], 3, AdjustDirection::Previous)
             .unwrap();
         assert!(matches!(
             tree.get_node_at(&[true]).unwrap(),
             Pane::Leaf { image_id: 1 }
         ));
 
-        tree.cycle_image(&[true], 3, AdjustDirection::Backward)
+        tree.cycle_image(&[true], 3, AdjustDirection::Previous)
             .unwrap();
         assert!(matches!(
             tree.get_node_at(&[true]).unwrap(),
@@ -795,17 +792,17 @@ mod tests {
         let tree = Pane::new_leaf();
 
         let nextv = tree
-            .navigate(&[], layout::Direction::Vertical, AdjustDirection::Forward)
+            .navigate(&[], layout::Direction::Vertical, AdjustDirection::Next)
             .unwrap();
         assert_eq!(nextv, vec![]);
 
         let prevv = tree
-            .navigate(&[], layout::Direction::Vertical, AdjustDirection::Backward)
+            .navigate(&[], layout::Direction::Vertical, AdjustDirection::Previous)
             .unwrap();
         assert_eq!(prevv, vec![]);
 
         let nexth = tree
-            .navigate(&[], layout::Direction::Horizontal, AdjustDirection::Forward)
+            .navigate(&[], layout::Direction::Horizontal, AdjustDirection::Next)
             .unwrap();
         assert_eq!(nexth, vec![]);
 
@@ -813,7 +810,7 @@ mod tests {
             .navigate(
                 &[],
                 layout::Direction::Horizontal,
-                AdjustDirection::Backward,
+                AdjustDirection::Previous,
             )
             .unwrap();
         assert_eq!(prevh, vec![]);
@@ -824,11 +821,7 @@ mod tests {
         let tree = Pane::new_split(layout::Direction::Horizontal);
 
         let nextv_fromleft = tree
-            .navigate(
-                &[true],
-                layout::Direction::Vertical,
-                AdjustDirection::Forward,
-            )
+            .navigate(&[true], layout::Direction::Vertical, AdjustDirection::Next)
             .unwrap();
         assert_eq!(nextv_fromleft, vec![true]);
 
@@ -836,17 +829,13 @@ mod tests {
             .navigate(
                 &[true],
                 layout::Direction::Vertical,
-                AdjustDirection::Backward,
+                AdjustDirection::Previous,
             )
             .unwrap();
         assert_eq!(prevv_fromleft, vec![true]);
 
         let nextv_fromright = tree
-            .navigate(
-                &[false],
-                layout::Direction::Vertical,
-                AdjustDirection::Forward,
-            )
+            .navigate(&[false], layout::Direction::Vertical, AdjustDirection::Next)
             .unwrap();
         assert_eq!(nextv_fromright, vec![false]);
 
@@ -854,7 +843,7 @@ mod tests {
             .navigate(
                 &[false],
                 layout::Direction::Vertical,
-                AdjustDirection::Backward,
+                AdjustDirection::Previous,
             )
             .unwrap();
         assert_eq!(prevv_fromright, vec![false]);
@@ -868,7 +857,7 @@ mod tests {
             .navigate(
                 &[true],
                 layout::Direction::Horizontal,
-                AdjustDirection::Forward,
+                AdjustDirection::Next,
             )
             .unwrap();
         assert_eq!(nexth_fromtop, vec![true]);
@@ -877,7 +866,7 @@ mod tests {
             .navigate(
                 &[true],
                 layout::Direction::Horizontal,
-                AdjustDirection::Backward,
+                AdjustDirection::Previous,
             )
             .unwrap();
         assert_eq!(prevh_fromtop, vec![true]);
@@ -886,7 +875,7 @@ mod tests {
             .navigate(
                 &[false],
                 layout::Direction::Horizontal,
-                AdjustDirection::Forward,
+                AdjustDirection::Next,
             )
             .unwrap();
         assert_eq!(nexth_frombottom, vec![false]);
@@ -895,7 +884,7 @@ mod tests {
             .navigate(
                 &[false],
                 layout::Direction::Horizontal,
-                AdjustDirection::Backward,
+                AdjustDirection::Previous,
             )
             .unwrap();
         assert_eq!(prevh_frombottom, vec![false]);
@@ -906,11 +895,7 @@ mod tests {
         let tree = Pane::new_split(layout::Direction::Vertical);
 
         let nextv_fromtop = tree
-            .navigate(
-                &[true],
-                layout::Direction::Vertical,
-                AdjustDirection::Forward,
-            )
+            .navigate(&[true], layout::Direction::Vertical, AdjustDirection::Next)
             .unwrap();
         assert_eq!(nextv_fromtop, vec![false]);
 
@@ -918,17 +903,13 @@ mod tests {
             .navigate(
                 &[true],
                 layout::Direction::Vertical,
-                AdjustDirection::Backward,
+                AdjustDirection::Previous,
             )
             .unwrap();
         assert_eq!(prevv_fromtop, vec![true]);
 
         let nextv_frombottom = tree
-            .navigate(
-                &[false],
-                layout::Direction::Vertical,
-                AdjustDirection::Forward,
-            )
+            .navigate(&[false], layout::Direction::Vertical, AdjustDirection::Next)
             .unwrap();
         assert_eq!(nextv_frombottom, vec![false]);
 
@@ -936,7 +917,7 @@ mod tests {
             .navigate(
                 &[false],
                 layout::Direction::Vertical,
-                AdjustDirection::Backward,
+                AdjustDirection::Previous,
             )
             .unwrap();
         assert_eq!(prevv_frombottom, vec![true]);

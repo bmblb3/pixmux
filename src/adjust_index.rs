@@ -1,19 +1,19 @@
 pub enum AdjustDirection {
-    Forward,
-    Backward,
+    Next,
+    Previous,
 }
 
 pub fn cycle_index(index: usize, len: usize, direction: AdjustDirection) -> usize {
     match direction {
-        AdjustDirection::Forward => (index + 1) % len,
-        AdjustDirection::Backward => (index + len - 1) % len,
+        AdjustDirection::Next => (index + 1) % len,
+        AdjustDirection::Previous => (index + len - 1) % len,
     }
 }
 
 pub fn step_index(index: usize, len: usize, direction: AdjustDirection) -> usize {
     match direction {
-        AdjustDirection::Forward => (index + 1).min(len - 1),
-        AdjustDirection::Backward => index.saturating_sub(1),
+        AdjustDirection::Next => (index + 1).min(len - 1),
+        AdjustDirection::Previous => index.saturating_sub(1),
     }
 }
 
@@ -27,7 +27,7 @@ mod tests {
 
         for test_case in test_cases {
             let (index, len, expected) = test_case;
-            assert_eq!(cycle_index(index, len, AdjustDirection::Forward), expected);
+            assert_eq!(cycle_index(index, len, AdjustDirection::Next), expected);
         }
     }
 
@@ -37,13 +37,13 @@ mod tests {
 
         for test_case in test_cases {
             let (index, len, expected) = test_case;
-            assert_eq!(cycle_index(index, len, AdjustDirection::Backward), expected);
+            assert_eq!(cycle_index(index, len, AdjustDirection::Previous), expected);
         }
     }
 
     #[test]
     fn test_single_element_cycle() {
-        let dirs = [AdjustDirection::Forward, AdjustDirection::Backward];
+        let dirs = [AdjustDirection::Next, AdjustDirection::Previous];
 
         for dir in dirs {
             assert_eq!(cycle_index(0, 1, dir), 0);
@@ -56,7 +56,7 @@ mod tests {
 
         for test_case in test_cases {
             let (index, len, expected) = test_case;
-            assert_eq!(step_index(index, len, AdjustDirection::Forward), expected);
+            assert_eq!(step_index(index, len, AdjustDirection::Next), expected);
         }
     }
 
@@ -66,13 +66,13 @@ mod tests {
 
         for test_case in test_cases {
             let (index, len, expected) = test_case;
-            assert_eq!(step_index(index, len, AdjustDirection::Backward), expected);
+            assert_eq!(step_index(index, len, AdjustDirection::Previous), expected);
         }
     }
 
     #[test]
     fn test_single_element_step() {
-        let dirs = [AdjustDirection::Forward, AdjustDirection::Backward];
+        let dirs = [AdjustDirection::Next, AdjustDirection::Previous];
 
         for dir in dirs {
             assert_eq!(step_index(0, 1, dir), 0);
