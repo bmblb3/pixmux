@@ -7,7 +7,7 @@ pub enum BTreeNode<L = (), B = ()> {
     },
 }
 
-impl<L> BTreeNode<L> {
+impl<L, B> BTreeNode<L, B> {
     pub fn get_paths(&self) -> Vec<Vec<bool>> {
         match self {
             BTreeNode::Leaf(_) => vec![vec![]],
@@ -20,9 +20,11 @@ impl<L> BTreeNode<L> {
 mod tests {
     use super::*;
 
+    type TestBTree = BTreeNode<(), ()>;
+
     #[test]
     fn test_btree_with_leaf_at_root_returns_computed_paths() {
-        let tree = BTreeNode::Leaf(());
+        let tree = TestBTree::Leaf(());
 
         let paths = tree.get_paths();
 
@@ -31,7 +33,8 @@ mod tests {
 
     #[test]
     fn test_btree_with_leaf_at_root_with_data_returns_computed_paths() {
-        let tree = BTreeNode::Leaf(42);
+        type TestConcreteBTree = BTreeNode<i8, ()>;
+        let tree = TestConcreteBTree::Leaf(42);
 
         let paths = tree.get_paths();
 
@@ -40,10 +43,24 @@ mod tests {
 
     #[test]
     fn test_btree_with_simple_branch_at_root_returns_computed_paths() {
-        let tree = BTreeNode::Branch {
+        let tree = TestBTree::Branch {
             first: Box::new(BTreeNode::Leaf(())),
             second: Box::new(BTreeNode::Leaf(())),
             data: (),
+        };
+
+        let paths = tree.get_paths();
+
+        assert_eq!(paths, [[true], [false]]);
+    }
+
+    #[test]
+    fn test_btree_with_simple_branch_with_data_at_root_returns_computed_paths() {
+        type TestConcreteBTree = BTreeNode<(), i8>;
+        let tree = TestConcreteBTree::Branch {
+            first: Box::new(BTreeNode::Leaf(())),
+            second: Box::new(BTreeNode::Leaf(())),
+            data: 42,
         };
 
         let paths = tree.get_paths();
