@@ -208,9 +208,43 @@ impl Pane {
     pub fn navigate(
         &self,
         path: &[bool],
-        _layout_direction: layout::Direction,
-        _adjust_direction: AdjustDirection,
+        layout_direction: layout::Direction,
+        adjust_direction: AdjustDirection,
     ) -> eyre::Result<Vec<bool>> {
+        let leaf_paths = self.collect_leaf_paths();
+
+        let leaf_index = leaf_paths
+            .iter()
+            .position(|x| x == path)
+            .ok_or_eyre("Could not find current path in leaf paths")?;
+
+        let (prev, thisplusnext) = leaf_paths.split_at(leaf_index);
+        let (_, next) = thisplusnext.split_at(1);
+        let previter = prev.iter().rev().collect::<Vec<_>>();
+        let nextiter = next.iter().collect::<Vec<_>>();
+
+        let search_array = match adjust_direction {
+            AdjustDirection::Forward => nextiter,
+            AdjustDirection::Backward => previter,
+        };
+
+        for candidate in search_array {
+            let mut common_parent = Vec::new();
+            for (a, b) in path.iter().zip(candidate.iter()) {
+                if a == b {
+                    common_parent.push(*a);
+                } else {
+                    break;
+                }
+            }
+            let common_parent_node = self.get_node_at(&common_parent)?;
+            if let Pane::Split { direction, .. } = common_parent_node
+                && *direction == layout_direction
+            {
+                return Ok(candidate.clone());
+            }
+        }
+
         Ok(path.to_vec())
     }
 }
@@ -836,5 +870,46 @@ mod tests {
             )
             .unwrap();
         assert_eq!(prevh_frombottom, vec![false]);
+    }
+
+    #[test]
+    fn test_root_vsplit_on_vnav() {
+        let tree = Pane::new_split(layout::Direction::Vertical);
+
+        let nextv_fromtop = tree
+            .navigate(
+                &[true],
+                layout::Direction::Vertical,
+                AdjustDirection::Forward,
+            )
+            .unwrap();
+        assert_eq!(nextv_fromtop, vec![false]);
+
+        let prevv_fromtop = tree
+            .navigate(
+                &[true],
+                layout::Direction::Vertical,
+                AdjustDirection::Backward,
+            )
+            .unwrap();
+        assert_eq!(prevv_fromtop, vec![true]);
+
+        let nextv_frombottom = tree
+            .navigate(
+                &[false],
+                layout::Direction::Vertical,
+                AdjustDirection::Forward,
+            )
+            .unwrap();
+        assert_eq!(nextv_frombottom, vec![false]);
+
+        let prevv_frombottom = tree
+            .navigate(
+                &[false],
+                layout::Direction::Vertical,
+                AdjustDirection::Backward,
+            )
+            .unwrap();
+        assert_eq!(prevv_frombottom, vec![true]);
     }
 }

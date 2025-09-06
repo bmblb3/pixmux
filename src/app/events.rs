@@ -42,27 +42,61 @@ impl App {
             }
 
             //
-            (KeyModifiers::NONE, KeyCode::Char('n')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('h')) => match self.current_tab {
                 Tab::Image => {
                     self.current_pane_path = self
                         .pane_tree
-                        .cycle(&self.current_pane_path, pixmux::AdjustDirection::Forward)
+                        .navigate(
+                            &self.current_pane_path,
+                            layout::Direction::Horizontal,
+                            pixmux::AdjustDirection::Backward,
+                        )
                         .unwrap();
                 }
                 Tab::Data => {}
             },
-            (KeyModifiers::SHIFT, KeyCode::Char('N')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('j')) => match self.current_tab {
                 Tab::Image => {
                     self.current_pane_path = self
                         .pane_tree
-                        .cycle(&self.current_pane_path, pixmux::AdjustDirection::Backward)
+                        .navigate(
+                            &self.current_pane_path,
+                            layout::Direction::Vertical,
+                            pixmux::AdjustDirection::Forward,
+                        )
+                        .unwrap();
+                }
+                Tab::Data => {}
+            },
+            (KeyModifiers::NONE, KeyCode::Char('k')) => match self.current_tab {
+                Tab::Image => {
+                    self.current_pane_path = self
+                        .pane_tree
+                        .navigate(
+                            &self.current_pane_path,
+                            layout::Direction::Vertical,
+                            pixmux::AdjustDirection::Backward,
+                        )
+                        .unwrap();
+                }
+                Tab::Data => {}
+            },
+            (KeyModifiers::NONE, KeyCode::Char('l')) => match self.current_tab {
+                Tab::Image => {
+                    self.current_pane_path = self
+                        .pane_tree
+                        .navigate(
+                            &self.current_pane_path,
+                            layout::Direction::Horizontal,
+                            pixmux::AdjustDirection::Forward,
+                        )
                         .unwrap();
                 }
                 Tab::Data => {}
             },
 
             //
-            (KeyModifiers::CONTROL, KeyCode::Char('v')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('r')) => match self.current_tab {
                 Tab::Image => {
                     self.current_pane_path = self
                         .pane_tree
@@ -71,7 +105,7 @@ impl App {
                 }
                 Tab::Data => {}
             },
-            (KeyModifiers::CONTROL, KeyCode::Char('s')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('b')) => match self.current_tab {
                 Tab::Image => {
                     self.current_pane_path = self
                         .pane_tree
@@ -82,7 +116,7 @@ impl App {
             },
 
             //
-            (KeyModifiers::CONTROL, KeyCode::Char('x')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('x')) => match self.current_tab {
                 Tab::Image => {
                     self.current_pane_path = self
                         .pane_tree
@@ -93,7 +127,7 @@ impl App {
             },
 
             //
-            (KeyModifiers::ALT, KeyCode::Char('h')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('a')) => match self.current_tab {
                 Tab::Image => {
                     self.pane_tree
                         .resize_leaf_at(&self.current_pane_path, layout::Direction::Horizontal, -5)
@@ -101,7 +135,7 @@ impl App {
                 }
                 Tab::Data => {}
             },
-            (KeyModifiers::ALT, KeyCode::Char('j')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('s')) => match self.current_tab {
                 Tab::Image => {
                     self.pane_tree
                         .resize_leaf_at(&self.current_pane_path, layout::Direction::Vertical, 5)
@@ -109,7 +143,7 @@ impl App {
                 }
                 Tab::Data => {}
             },
-            (KeyModifiers::ALT, KeyCode::Char('k')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('w')) => match self.current_tab {
                 Tab::Image => {
                     self.pane_tree
                         .resize_leaf_at(&self.current_pane_path, layout::Direction::Vertical, -5)
@@ -117,7 +151,7 @@ impl App {
                 }
                 Tab::Data => {}
             },
-            (KeyModifiers::ALT, KeyCode::Char('l')) => match self.current_tab {
+            (KeyModifiers::NONE, KeyCode::Char('d')) => match self.current_tab {
                 Tab::Image => {
                     self.pane_tree
                         .resize_leaf_at(&self.current_pane_path, layout::Direction::Horizontal, 5)
