@@ -38,30 +38,6 @@ mod tests {
 
     type TestBTree = BTreeNode<(), ()>;
 
-    #[test]
-    fn test_btree_with_leaf_at_root_with_data_returns_computed_paths() {
-        type TestConcreteBTree = BTreeNode<i8, ()>;
-        let tree = TestConcreteBTree::Leaf(42);
-
-        let paths = tree.collect_paths();
-
-        assert_eq!(paths, [[]]);
-    }
-
-    #[test]
-    fn test_btree_with_simple_branch_with_data_at_root_returns_computed_paths() {
-        type TestConcreteBTree = BTreeNode<(), i8>;
-        let tree = TestConcreteBTree::Branch {
-            first: Box::new(BTreeNode::Leaf(())),
-            second: Box::new(BTreeNode::Leaf(())),
-            data: 42,
-        };
-
-        let paths = tree.collect_paths();
-
-        assert_eq!(paths, [[true], [false]]);
-    }
-
     impl TestBTree {
         fn new_leaf() -> Self {
             BTreeNode::Leaf(())
@@ -128,5 +104,27 @@ mod tests {
             let paths = tree.collect_paths();
             assert_eq!(paths, expected);
         }
+    }
+
+    #[test]
+    fn test_btree_with_leaf_at_root_with_data_returns_computed_paths() {
+        let tree = BTreeNode::<i32>::Leaf(42);
+
+        let paths = tree.collect_paths();
+
+        assert_eq!(paths, [[]]);
+    }
+
+    #[test]
+    fn test_btree_with_simple_branch_with_data_at_root_returns_computed_paths() {
+        let tree = BTreeNode::Branch {
+            first: Box::new(BTreeNode::Leaf(())),
+            second: Box::new(BTreeNode::Leaf(())),
+            data: 42,
+        };
+
+        let paths = tree.collect_paths();
+
+        assert_eq!(paths, [[true], [false]]);
     }
 }
