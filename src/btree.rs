@@ -10,8 +10,7 @@ pub enum BTreeNode<L = (), B = ()> {
 impl<L, B> BTreeNode<L, B> {
     pub fn collect_paths(&self) -> Vec<Vec<bool>> {
         let mut all_paths = Vec::new();
-        let mut current_path = Vec::new();
-        Self::collect_paths_impl(self, &mut current_path, &mut all_paths);
+        Self::collect_paths_impl(self, &mut Vec::new(), &mut all_paths);
         all_paths
     }
 
@@ -21,17 +20,13 @@ impl<L, B> BTreeNode<L, B> {
         all_paths: &mut Vec<Vec<bool>>,
     ) {
         match node {
-            Self::Leaf(_) => {
-                all_paths.push(current_path.to_vec());
-            }
+            Self::Leaf(_) => all_paths.push(current_path.to_vec()),
             Self::Branch { first, second, .. } => {
-                current_path.push(true);
-                Self::collect_paths_impl(first, current_path, all_paths);
-                current_path.pop();
-
-                current_path.push(false);
-                Self::collect_paths_impl(second, current_path, all_paths);
-                current_path.pop();
+                for (child, bool) in [(first, true), (second, false)] {
+                    current_path.push(bool);
+                    Self::collect_paths_impl(child, current_path, all_paths);
+                    current_path.pop();
+                }
             }
         }
     }
