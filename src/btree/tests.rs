@@ -110,7 +110,7 @@ mod construct_from_spec {
     use super::*;
 
     impl TestBTree {
-        fn spec_from(leaf_paths: Vec<Vec<bool>>) -> BTreeSpec {
+        pub fn spec_from(leaf_paths: Vec<Vec<bool>>) -> BTreeSpec {
             let size = leaf_paths.len();
             BTreeSpec {
                 leaf_paths,
@@ -212,5 +212,25 @@ mod construct_from_spec {
         let result = BTreeNode::from_spec(&spec);
         let actual_error_msg = result.unwrap_err().to_string();
         assert_eq!(actual_error_msg, expected_error_msg);
+    }
+}
+
+mod extract_leaf_at {
+    use super::*;
+
+    #[rstest::rstest]
+    #[case(BTreeSpec {
+        leaf_paths: vec![vec![]],
+        leaf_data: vec![1],
+        branch_data: vec![],
+    })] // leaf at root
+    fn test_btree(#[case] spec: BTreeSpec<i8, ()>) {
+        let tree = BTreeNode::from_spec(&spec).unwrap();
+        for (path, expected_data) in spec.leaf_paths.iter().zip(spec.leaf_data) {
+            let leaf = tree.get_leaf_at(path).unwrap();
+            if let BTreeNode::Leaf(actual_data) = *leaf {
+                assert_eq!(actual_data, expected_data);
+            }
+        }
     }
 }

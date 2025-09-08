@@ -60,6 +60,7 @@ impl<L, B> BTreeNode<L, B> {
             }
         }
     }
+
     fn assign_data(
         node: &mut Self,
         leaf_data_iter: &mut Iter<L>,
@@ -123,6 +124,39 @@ impl<L, B> BTreeNode<L, B> {
         }
 
         Ok(tree)
+    }
+
+    fn get_leaf_at_impl<'a>(node: &'a Self, mut path: &mut [bool]) -> eyre::Result<&'a Self>
+    where
+        L: Default,
+    {
+        let is_first = match path.split_off_first_mut() {
+            None => {
+                if let Self::Leaf(_) = node {
+                    return Ok(node);
+                } else {
+                    return Err(eyre::eyre!("Path does not point to Leaf"));
+                }
+            }
+            Some(v) => *v,
+        };
+
+        if let Self::Branch { first, second, .. } = node {
+            if is_first {
+                Self::get_leaf_at_impl(first, path)?;
+            } else {
+                Self::get_leaf_at_impl(second, path)?;
+            }
+        }
+        Err(eyre::eyre!("Path does not point to Leaf"))
+    }
+
+    pub fn get_leaf_at(&self, path: &[bool]) -> eyre::Result<&Self>
+    where
+        L: Default,
+    {
+        let mut passvar = path.to_owned();
+        Self::get_leaf_at_impl(self, &mut passvar)
     }
 
     pub fn collect_paths(&self) -> Vec<Vec<bool>> {
