@@ -1,3 +1,4 @@
+#![warn(clippy::used_underscore_binding)]
 pub mod adjust_index;
 pub mod btree;
 pub mod imagefile;

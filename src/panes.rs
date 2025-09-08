@@ -39,8 +39,6 @@ macro_rules! impl_get_node_at {
 }
 
 impl Pane {
-    #![warn(clippy::used_underscore_binding)]
-
     pub fn new_leaf() -> Self {
         Pane::Leaf { image_id: 0 }
     }
