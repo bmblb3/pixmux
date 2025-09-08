@@ -1,4 +1,4 @@
-use color_eyre::eyre::{self, Ok};
+use color_eyre::eyre::{self, Ok, OptionExt};
 
 pub struct BTreeSpec<L = (), B = ()> {
     pub leaf_paths: Vec<Vec<bool>>,
@@ -26,26 +26,23 @@ impl<L, B> BTreeNode<L, B> {
         L: Clone,
         B: Clone,
     {
-        if !path.is_empty() {
-            if let BTreeNode::Leaf(_) = node {
-                let first = BTreeNode::Leaf(leaf_data[0].clone());
-                let second = BTreeNode::Leaf(leaf_data[0].clone());
-                *node = BTreeNode::Branch {
-                    first: Box::new(first),
-                    second: Box::new(second),
-                    data: branch_data[0].clone(),
-                };
-            };
+        let build_first_child = *path.split_off_first_mut().ok_or_eyre("Leaf node")?;
 
-            if let BTreeNode::Branch { first, second, .. } = node {
-                let build_first_child = *path.split_off_first_mut().unwrap();
-                if build_first_child {
-                    Self::build_path(first, path, leaf_data, branch_data)?;
-                } else {
-                    Self::build_path(second, path, leaf_data, branch_data)?;
-                }
-            }
+        if let BTreeNode::Leaf(_) = node {
+            *node = BTreeNode::Branch {
+                first: Box::new(BTreeNode::Leaf(leaf_data[0].clone())),
+                second: Box::new(BTreeNode::Leaf(leaf_data[0].clone())),
+                data: branch_data[0].clone(),
+            };
         };
+
+        if let BTreeNode::Branch { first, second, .. } = node {
+            if build_first_child {
+                Self::build_path(first, path, leaf_data, branch_data)?;
+            } else {
+                Self::build_path(second, path, leaf_data, branch_data)?;
+            }
+        }
         Ok(())
     }
 
@@ -67,7 +64,8 @@ impl<L, B> BTreeNode<L, B> {
                 &mut path.clone(),
                 &mut leaf_data.clone(),
                 &mut branch_data.clone(),
-            )?;
+            )
+            .unwrap_or_default();
         }
 
         Ok(tree)
