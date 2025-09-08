@@ -81,7 +81,9 @@ impl<L, B> BTreeNode<L, B> {
                 second,
                 data,
             } => {
-                let newdata = branch_data_iter.next().unwrap();
+                let newdata = branch_data_iter
+                    .next()
+                    .ok_or_eyre("Prematurely exhausted branch data")?;
                 *data = newdata.clone();
                 Self::assign_data(first, leaf_data_iter, branch_data_iter)?;
                 Self::assign_data(second, leaf_data_iter, branch_data_iter)?;
