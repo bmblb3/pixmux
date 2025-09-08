@@ -3,30 +3,30 @@ use super::*;
 // Helper type alias for testing with unit data
 type TestBTree = BTreeNode<(), ()>;
 
-impl TestBTree {
-    fn new_leaf() -> Self {
-        BTreeNode::Leaf(())
-    }
-
-    fn new_branch(first: BTreeNode<(), ()>, second: BTreeNode<(), ()>) -> Self {
-        BTreeNode::Branch {
-            first: Box::new(first),
-            second: Box::new(second),
-            data: (),
-        }
-    }
-
-    fn new_lastbranch() -> Self {
-        BTreeNode::Branch {
-            first: Box::new(Self::new_leaf()),
-            second: Box::new(Self::new_leaf()),
-            data: (),
-        }
-    }
-}
-
 mod path_collection {
     use super::*;
+
+    impl TestBTree {
+        fn new_leaf() -> Self {
+            BTreeNode::Leaf(())
+        }
+
+        fn new_branch(first: BTreeNode<(), ()>, second: BTreeNode<(), ()>) -> Self {
+            BTreeNode::Branch {
+                first: Box::new(first),
+                second: Box::new(second),
+                data: (),
+            }
+        }
+
+        fn new_lastbranch() -> Self {
+            BTreeNode::Branch {
+                first: Box::new(Self::new_leaf()),
+                second: Box::new(Self::new_leaf()),
+                data: (),
+            }
+        }
+    }
 
     #[rstest::rstest]
     #[case(TestBTree::new_leaf(),       vec![vec![]])] // leaf at root
@@ -82,27 +82,23 @@ mod path_collection {
 mod create_from_spec {
     use super::*;
 
+    impl TestBTree {
+        fn spec_from(leaf_paths: Vec<Vec<bool>>) -> BTreeSpec {
+            let size = leaf_paths.len();
+            BTreeSpec {
+                leaf_paths,
+                leaf_data: vec![(); size],
+                branch_data: vec![(); size - 1],
+            }
+        }
+    }
+
     #[rstest::rstest]
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![]],
-        leaf_data: vec![()],
-        branch_data: vec![],
-    })] // leaf at root
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![true], vec![false]],
-        leaf_data: vec![(), ()],
-        branch_data: vec![()],
-    })] // end-branch at root
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![true, true], vec![true, false], vec![false]],
-        leaf_data: vec![(), (), ()],
-        branch_data: vec![(), ()],
-    })] // first-heavy branching
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![true], vec![false, true], vec![false, false]],
-        leaf_data: vec![(), (), ()],
-        branch_data: vec![(), ()],
-    })] // second-heavy branching
+    #[case(TestBTree::spec_from(vec![vec![]]))] // leaf at root
+    #[case(TestBTree::spec_from(vec![vec![true], vec![false]]))] // end-branch at root
+    #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false]]))] // first-heavy branching
+    #[case(TestBTree::spec_from(vec![vec![true], vec![false, true], vec![false, false]]))] // second-heavy branching
+    #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]]))] // second-heavy branching
     fn test_btree_returns_computed_paths_parametric(#[case] spec: BTreeSpec) {
         assert_eq!(
             BTreeNode::<(), ()>::from_spec(&spec)
