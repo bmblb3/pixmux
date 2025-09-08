@@ -99,19 +99,46 @@ impl<L, B> BTreeNode<L, B> {
         L: Clone,
     {
         let mut leaf_data = Vec::new();
-        Self::collect_leaf_data_imp(self, &mut leaf_data);
+        Self::collect_leaf_data_impl(self, &mut leaf_data);
         leaf_data
     }
 
-    fn collect_leaf_data_imp(node: &Self, leaf_data: &mut Vec<L>)
+    fn collect_leaf_data_impl(node: &Self, leaf_data: &mut Vec<L>)
     where
         L: Clone,
     {
         match node {
             Self::Leaf(data) => leaf_data.push(data.clone()),
             Self::Branch { first, second, .. } => {
-                Self::collect_leaf_data_imp(first, leaf_data);
-                Self::collect_leaf_data_imp(second, leaf_data);
+                Self::collect_leaf_data_impl(first, leaf_data);
+                Self::collect_leaf_data_impl(second, leaf_data);
+            }
+        }
+    }
+
+    pub fn collect_branch_data(&self) -> Vec<B>
+    where
+        B: Clone,
+    {
+        let mut branch_data = Vec::new();
+        Self::collect_branch_data_impl(self, &mut branch_data);
+        branch_data
+    }
+
+    fn collect_branch_data_impl(node: &Self, branch_data: &mut Vec<B>)
+    where
+        B: Clone,
+    {
+        match node {
+            Self::Leaf(_) => {}
+            Self::Branch {
+                first,
+                second,
+                data,
+            } => {
+                branch_data.push(data.clone());
+                Self::collect_branch_data_impl(first, branch_data);
+                Self::collect_branch_data_impl(second, branch_data);
             }
         }
     }

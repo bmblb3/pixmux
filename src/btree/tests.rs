@@ -32,10 +32,12 @@ mod path_collection {
     #[case(TestBTree::new_leaf(),
            vec![vec![]],
            vec![()    ],
+           vec![      ],
     )] // leaf at root
     #[case(TestBTree::new_lastbranch(),
            vec![vec![true], vec![false]],
            vec![()        , ()         ],
+           vec![         (),            ],
     )] // end-branch at root
     #[case(TestBTree::new_branch(
                TestBTree::new_lastbranch(),
@@ -43,6 +45,7 @@ mod path_collection {
                ),
           vec![vec![true, true], vec![true, false], vec![false]],
           vec![()              , ()               , ()         ],
+          vec![               (),                (),           ],
     )] // first-heavy branching
     #[case(TestBTree::new_branch(
                TestBTree::new_leaf(),
@@ -50,6 +53,7 @@ mod path_collection {
                ),
            vec![vec![true], vec![false, true], vec![false, false]],
            vec![()        , ()               , ()                ],
+           vec![         (),                (),                  ],
     )] // second-heavy branching
     #[case(TestBTree::new_branch(
                TestBTree::new_lastbranch(),
@@ -57,14 +61,17 @@ mod path_collection {
                ),
            vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]],
            vec![()              , ()               , ()               , ()                ],
+           vec![               (),                (),                (),                  ],
     )] // equal branching
     fn test_btree_returns_computed_paths_parametric(
         #[case] tree: BTreeNode,
         #[case] expected_paths: Vec<Vec<bool>>,
         #[case] expected_leaf_data: Vec<()>,
+        #[case] expected_branch_data: Vec<()>,
     ) {
         assert_eq!(tree.collect_paths(), expected_paths);
         assert_eq!(tree.collect_leaf_data(), expected_leaf_data);
+        assert_eq!(tree.collect_branch_data(), expected_branch_data);
     }
 
     // concrete (non-unit) types
