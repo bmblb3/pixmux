@@ -1,4 +1,4 @@
-use color_eyre::eyre::{self, Ok, OptionExt};
+use color_eyre::eyre::{self, Ok};
 
 pub struct BTreeSpec<L = (), B = ()> {
     pub leaf_paths: Vec<Vec<bool>>,
@@ -41,8 +41,8 @@ impl<L, B> BTreeNode<L, B> {
         B: Clone + Default,
     {
         let build_first_child = match path.split_off_first_mut() {
-            None => return, // skip if we are done branching
-            Some(v) => *v,  // true if next child is "left/first"
+            None => return,
+            Some(v) => *v,
         };
 
         if let Self::Leaf(_) = node {
