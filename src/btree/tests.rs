@@ -61,8 +61,10 @@ mod path_collection {
         let tree = BTreeNode::<i32>::Leaf(42);
 
         let paths = tree.collect_paths();
+        let leaf_data = tree.collect_leaf_data();
 
         assert_eq!(paths, [[]]);
+        assert_eq!(leaf_data, [42]);
     }
 
     #[test]

@@ -17,7 +17,7 @@ pub enum BTreeNode<L = (), B = ()> {
 
 impl<L, B> BTreeNode<L, B> {
     fn build_path(
-        node: &mut BTreeNode<L, B>,
+        node: &mut Self,
         mut path: &mut [bool],
         leaf_data: &mut [L],
         branch_data: &mut [B],
@@ -90,6 +90,28 @@ impl<L, B> BTreeNode<L, B> {
                     Self::collect_paths_impl(child, current_path, all_paths);
                     current_path.pop();
                 }
+            }
+        }
+    }
+
+    pub fn collect_leaf_data(&self) -> Vec<L>
+    where
+        L: Clone,
+    {
+        let mut leaf_data = Vec::new();
+        Self::collect_leaf_data_imp(self, &mut leaf_data);
+        leaf_data
+    }
+
+    fn collect_leaf_data_imp(node: &Self, leaf_data: &mut Vec<L>)
+    where
+        L: Clone,
+    {
+        match node {
+            Self::Leaf(data) => leaf_data.push(data.clone()),
+            Self::Branch { first, second, .. } => {
+                Self::collect_leaf_data_imp(first, leaf_data);
+                Self::collect_leaf_data_imp(second, leaf_data);
             }
         }
     }
