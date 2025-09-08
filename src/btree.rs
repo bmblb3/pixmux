@@ -107,6 +107,9 @@ impl<L, B> BTreeNode<L, B> {
         for path in leaf_paths {
             Self::default_from_path(&mut tree, &mut path.clone());
         }
+        if tree.collect_paths() != *leaf_paths {
+            return Err(eyre::eyre!("Invalid path spec"));
+        }
 
         let mut leaf_data_iter = leaf_data.iter();
         let mut branch_data_iter = branch_data.iter();

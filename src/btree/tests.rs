@@ -154,14 +154,14 @@ mod construct_from_spec {
     #[rstest::rstest]
     #[case(
         BTreeSpec {
-            leaf_paths: vec![],
+            leaf_paths: vec![vec![]],
             leaf_data: vec![],
             branch_data: vec![],
         }, "Prematurely exhausted leaf data"
     )]
     #[case(
         BTreeSpec {
-            leaf_paths: vec![],
+            leaf_paths: vec![vec![]],
             leaf_data: vec![(), ()],
             branch_data: vec![],
         }, "Remaining unused leaf data"
@@ -179,6 +179,34 @@ mod construct_from_spec {
             leaf_data: vec![(),()],
             branch_data: vec![(),()],
         }, "Remaining unused branch data"
+    )]
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![vec![true]],
+            leaf_data: vec![()],
+            branch_data: vec![],
+        }, "Invalid path spec"
+    )]
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![vec![false]],
+            leaf_data: vec![()],
+            branch_data: vec![],
+        }, "Invalid path spec"
+    )]
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![],
+            leaf_data: vec![],
+            branch_data: vec![],
+        }, "Invalid path spec"
+    )]
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![vec![true], vec![true], vec![false]],
+            leaf_data: vec![(),(),()],
+            branch_data: vec![()],
+        }, "Invalid path spec"
     )]
     fn test_btree_fails(#[case] spec: BTreeSpec, #[case] expected_error_msg: String) {
         let result = BTreeNode::from_spec(&spec);
