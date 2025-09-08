@@ -127,23 +127,9 @@ mod create_from_spec {
     #[case(TestBTree::spec_from(vec![vec![true], vec![false, true], vec![false, false]]))] // second-heavy branching
     #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]]))] // second-heavy branching
     fn test_btree_returns_computed_paths_parametric(#[case] spec: BTreeSpec) {
-        assert_eq!(
-            BTreeNode::<(), ()>::from_spec(&spec)
-                .unwrap()
-                .collect_paths(),
-            spec.leaf_paths
-        );
-        assert_eq!(
-            BTreeNode::<(), ()>::from_spec(&spec)
-                .unwrap()
-                .collect_leaf_data(),
-            spec.leaf_data
-        );
-        assert_eq!(
-            BTreeNode::<(), ()>::from_spec(&spec)
-                .unwrap()
-                .collect_branch_data(),
-            spec.branch_data
-        );
+        let tree = BTreeNode::<(), ()>::from_spec(&spec).unwrap();
+        assert_eq!(tree.collect_paths(), spec.leaf_paths);
+        assert_eq!(tree.collect_leaf_data(), spec.leaf_data);
+        assert_eq!(tree.collect_branch_data(), spec.branch_data);
     }
 }
