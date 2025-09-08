@@ -234,6 +234,16 @@ mod extract_leaf_at {
         leaf_data: vec![1, 2, 3],
         branch_data: vec![(), ()],
     })] // first-heavy branching
+    #[case(BTreeSpec {
+        leaf_paths: vec![vec![true], vec![false, true], vec![false, false]],
+        leaf_data: vec![1, 2, 3],
+        branch_data: vec![(), ()],
+    })] // second-heavy branching
+    #[case(BTreeSpec {
+        leaf_paths: vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]],
+        leaf_data: vec![1, 2, 3, 4],
+        branch_data: vec![(), (), ()],
+    })] // second-heavy branching
     fn test_btree(#[case] spec: BTreeSpec<i8, ()>) {
         let tree = BTreeNode::from_spec(&spec).unwrap();
         for (path, expected_data) in spec.leaf_paths.iter().zip(spec.leaf_data) {
