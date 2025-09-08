@@ -78,3 +78,27 @@ mod path_collection {
         assert_eq!(paths, [[true], [false]]);
     }
 }
+
+mod create_from_spec {
+    use super::*;
+
+    #[rstest::rstest]
+    #[case(BTreeSpec {
+        leaf_paths: vec![vec![]],
+        leaf_data: vec![()],
+        branch_data: vec![],
+    })] // leaf at root
+    #[case(BTreeSpec {
+        leaf_paths: vec![vec![true], vec![false]],
+        leaf_data: vec![(), ()],
+        branch_data: vec![()],
+    })] // end-branch at root
+    fn test_btree_returns_computed_paths_parametric(#[case] spec: BTreeSpec) {
+        assert_eq!(
+            BTreeNode::<(), ()>::from_spec(&spec)
+                .unwrap()
+                .collect_paths(),
+            spec.leaf_paths
+        );
+    }
+}
