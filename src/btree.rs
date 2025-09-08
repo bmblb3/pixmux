@@ -9,38 +9,48 @@ pub struct BTreeSpec<L = (), B = ()> {
 pub enum BTreeNode<L = (), B = ()> {
     Leaf(L),
     Branch {
-        first: Box<BTreeNode<L, B>>,
-        second: Box<BTreeNode<L, B>>,
+        first: Box<Self>,
+        second: Box<Self>,
         data: B,
     },
 }
 
 impl<L, B> BTreeNode<L, B> {
-    fn build_path(
-        node: &mut Self,
-        mut path: &mut [bool],
-        leaf_data: &mut [L],
-        branch_data: &mut [B],
-    ) -> eyre::Result<()>
+    fn default_leaf() -> Self
     where
-        L: Clone,
-        B: Clone,
+        L: Default,
+    {
+        Self::Leaf(L::default())
+    }
+
+    fn default_branch() -> Self
+    where
+        L: Default,
+        B: Default,
+    {
+        Self::Branch {
+            first: Box::new(Self::default_leaf()),
+            second: Box::new(Self::default_leaf()),
+            data: B::default(),
+        }
+    }
+
+    fn build_path(node: &mut Self, mut path: &mut [bool]) -> eyre::Result<()>
+    where
+        L: Clone + Default,
+        B: Clone + Default,
     {
         let build_first_child = *path.split_off_first_mut().ok_or_eyre("Leaf node")?;
 
-        if let BTreeNode::Leaf(_) = node {
-            *node = BTreeNode::Branch {
-                first: Box::new(BTreeNode::Leaf(leaf_data[0].clone())),
-                second: Box::new(BTreeNode::Leaf(leaf_data[0].clone())),
-                data: branch_data[0].clone(),
-            };
+        if let Self::Leaf(_) = node {
+            *node = Self::default_branch();
         };
 
-        if let BTreeNode::Branch { first, second, .. } = node {
+        if let Self::Branch { first, second, .. } = node {
             if build_first_child {
-                Self::build_path(first, path, leaf_data, branch_data)?;
+                Self::build_path(first, path)?;
             } else {
-                Self::build_path(second, path, leaf_data, branch_data)?;
+                Self::build_path(second, path)?;
             }
         }
         Ok(())
@@ -48,24 +58,14 @@ impl<L, B> BTreeNode<L, B> {
 
     pub fn from_spec(spec: &BTreeSpec<L, B>) -> eyre::Result<Self>
     where
-        L: Clone,
-        B: Clone,
+        L: Clone + Default,
+        B: Clone + Default,
     {
-        let BTreeSpec {
-            leaf_paths,
-            leaf_data,
-            branch_data,
-        } = spec;
+        let BTreeSpec { leaf_paths, .. } = spec;
 
-        let mut tree = Self::Leaf(leaf_data.first().unwrap().clone());
+        let mut tree = Self::Leaf(L::default());
         for path in leaf_paths {
-            Self::build_path(
-                &mut tree,
-                &mut path.clone(),
-                &mut leaf_data.clone(),
-                &mut branch_data.clone(),
-            )
-            .unwrap_or_default();
+            Self::build_path(&mut tree, &mut path.clone()).unwrap_or_default();
         }
 
         Ok(tree)
