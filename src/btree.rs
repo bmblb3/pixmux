@@ -43,20 +43,18 @@ impl<L, B> BTreeNode<L, B> {
         L: Clone + Default,
         B: Clone + Default,
     {
-        let build_first_child = match path.split_off_first_mut() {
-            None => return,
-            Some(v) => *v,
-        };
-
-        if let Self::Leaf(_) = node {
-            *node = Self::default_branch();
-        };
-
-        if let Self::Branch { first, second, .. } = node {
-            if build_first_child {
-                Self::default_from_path(first, path);
-            } else {
-                Self::default_from_path(second, path);
+        match node {
+            Self::Leaf(_) if path.is_empty() => {}
+            Self::Leaf(_) => {
+                *node = Self::default_branch();
+            }
+            Self::Branch { first, second, .. } => {
+                let is_first = *path.split_off_first_mut().unwrap();
+                if is_first {
+                    Self::default_from_path(first, path)
+                } else {
+                    Self::default_from_path(second, path)
+                }
             }
         }
     }
