@@ -35,12 +35,15 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    fn build_path(node: &mut Self, mut path: &mut [bool]) -> eyre::Result<()>
+    fn default_from_path(node: &mut Self, mut path: &mut [bool])
     where
         L: Clone + Default,
         B: Clone + Default,
     {
-        let build_first_child = *path.split_off_first_mut().ok_or_eyre("Leaf node")?;
+        let build_first_child = match path.split_off_first_mut() {
+            None => return, // skip if we are done branching
+            Some(v) => *v,  // true if next child is "left/first"
+        };
 
         if let Self::Leaf(_) = node {
             *node = Self::default_branch();
@@ -48,12 +51,11 @@ impl<L, B> BTreeNode<L, B> {
 
         if let Self::Branch { first, second, .. } = node {
             if build_first_child {
-                Self::build_path(first, path)?;
+                Self::default_from_path(first, path);
             } else {
-                Self::build_path(second, path)?;
+                Self::default_from_path(second, path);
             }
         }
-        Ok(())
     }
 
     pub fn from_spec(spec: &BTreeSpec<L, B>) -> eyre::Result<Self>
@@ -65,7 +67,7 @@ impl<L, B> BTreeNode<L, B> {
 
         let mut tree = Self::Leaf(L::default());
         for path in leaf_paths {
-            Self::build_path(&mut tree, &mut path.clone()).unwrap_or_default();
+            Self::default_from_path(&mut tree, &mut path.clone());
         }
 
         Ok(tree)
