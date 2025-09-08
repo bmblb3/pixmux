@@ -29,30 +29,42 @@ mod path_collection {
     }
 
     #[rstest::rstest]
-    #[case(TestBTree::new_leaf(),       vec![vec![]])] // leaf at root
-    #[case(TestBTree::new_lastbranch(), vec![vec![true], vec![false]])] // end-branch at root
+    #[case(TestBTree::new_leaf(),
+           vec![vec![]],
+           vec![()    ],
+    )] // leaf at root
+    #[case(TestBTree::new_lastbranch(),
+           vec![vec![true], vec![false]],
+           vec![()        , ()         ],
+    )] // end-branch at root
     #[case(TestBTree::new_branch(
-                          TestBTree::new_lastbranch(),
-                          TestBTree::new_leaf(),
-                      ),                vec![vec![true, true], vec![true, false], vec![false]])] // first-heavy branching
+               TestBTree::new_lastbranch(),
+               TestBTree::new_leaf(),
+               ),
+          vec![vec![true, true], vec![true, false], vec![false]],
+          vec![()              , ()               , ()         ],
+    )] // first-heavy branching
     #[case(TestBTree::new_branch(
-                          TestBTree::new_leaf(),
-                          TestBTree::new_lastbranch(),
-                      ),                vec![vec![true], vec![false, true], vec![false, false]])] // second-heavy branching
+               TestBTree::new_leaf(),
+               TestBTree::new_lastbranch(),
+               ),
+           vec![vec![true], vec![false, true], vec![false, false]],
+           vec![()        , ()               , ()                ],
+    )] // second-heavy branching
     #[case(TestBTree::new_branch(
-                          TestBTree::new_lastbranch(),
-                          TestBTree::new_lastbranch(),
-                      ),                vec![
-                                            vec![true, true],
-                                            vec![true, false],
-                                            vec![false, true],
-                                            vec![false, false],
-                                        ])] // equal branching
+               TestBTree::new_lastbranch(),
+               TestBTree::new_lastbranch(),
+               ),
+           vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]],
+           vec![()              , ()               , ()               , ()                ],
+    )] // equal branching
     fn test_btree_returns_computed_paths_parametric(
         #[case] tree: BTreeNode,
-        #[case] expected: Vec<Vec<bool>>,
+        #[case] expected_paths: Vec<Vec<bool>>,
+        #[case] expected_leaf_data: Vec<()>,
     ) {
-        assert_eq!(tree.collect_paths(), expected);
+        assert_eq!(tree.collect_paths(), expected_paths);
+        assert_eq!(tree.collect_leaf_data(), expected_leaf_data);
     }
 
     // concrete (non-unit) types
