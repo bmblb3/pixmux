@@ -132,4 +132,22 @@ mod create_from_spec {
         assert_eq!(tree.collect_leaf_data(), spec.leaf_data);
         assert_eq!(tree.collect_branch_data(), spec.branch_data);
     }
+
+    #[test]
+    fn test_btree_with_data() {
+        let spec = BTreeSpec {
+            leaf_paths: vec![
+                vec![true, true],
+                vec![true, false],
+                vec![false, true],
+                vec![false, false],
+            ],
+            leaf_data: vec![1, 2, 3, 4],
+            branch_data: vec![5, 6, 7],
+        };
+        let tree = BTreeNode::from_spec(&spec).unwrap();
+        assert_eq!(tree.collect_paths(), spec.leaf_paths);
+        assert_eq!(tree.collect_leaf_data(), spec.leaf_data);
+        assert_eq!(tree.collect_branch_data(), spec.branch_data);
+    }
 }

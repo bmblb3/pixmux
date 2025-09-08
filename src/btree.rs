@@ -1,3 +1,5 @@
+use std::slice::Iter;
+
 use color_eyre::eyre::{self, Ok};
 
 pub struct BTreeSpec<L = (), B = ()> {
@@ -57,18 +59,46 @@ impl<L, B> BTreeNode<L, B> {
             }
         }
     }
+    fn assign_data(node: &mut Self, leaf_data_iter: &mut Iter<L>, branch_data_iter: &mut Iter<B>)
+    where
+        L: Clone,
+        B: Clone,
+    {
+        match node {
+            Self::Leaf(data) => {
+                let newdata = leaf_data_iter.next().unwrap();
+                *data = newdata.clone();
+            }
+            Self::Branch {
+                first,
+                second,
+                data,
+            } => {
+                let newdata = branch_data_iter.next().unwrap();
+                *data = newdata.clone();
+                Self::assign_data(first, leaf_data_iter, branch_data_iter);
+                Self::assign_data(second, leaf_data_iter, branch_data_iter);
+            }
+        }
+    }
 
     pub fn from_spec(spec: &BTreeSpec<L, B>) -> eyre::Result<Self>
     where
         L: Clone + Default,
         B: Clone + Default,
     {
-        let BTreeSpec { leaf_paths, .. } = spec;
+        let BTreeSpec {
+            leaf_paths,
+            leaf_data,
+            branch_data,
+        } = spec;
 
         let mut tree = Self::Leaf(L::default());
         for path in leaf_paths {
             Self::default_from_path(&mut tree, &mut path.clone());
         }
+
+        Self::assign_data(&mut tree, &mut leaf_data.iter(), &mut branch_data.iter());
 
         Ok(tree)
     }
