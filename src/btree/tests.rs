@@ -81,9 +81,11 @@ mod path_collection {
 
         let paths = tree.collect_paths();
         let leaf_data = tree.collect_leaf_data();
+        let branch_data = tree.collect_branch_data();
 
         assert_eq!(paths, [[]]);
         assert_eq!(leaf_data, [42]);
+        assert_eq!(branch_data, []);
     }
 
     #[test]
@@ -95,8 +97,12 @@ mod path_collection {
         };
 
         let paths = tree.collect_paths();
+        let leaf_data = tree.collect_leaf_data();
+        let branch_data = tree.collect_branch_data();
 
         assert_eq!(paths, [[true], [false]]);
+        assert_eq!(leaf_data, [(), ()]);
+        assert_eq!(branch_data, [42]);
     }
 }
 
