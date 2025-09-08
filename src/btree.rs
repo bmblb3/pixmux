@@ -126,37 +126,23 @@ impl<L, B> BTreeNode<L, B> {
         Ok(tree)
     }
 
-    fn get_leaf_at_impl<'a>(node: &'a Self, mut path: &mut [bool]) -> eyre::Result<&'a Self>
-    where
-        L: Default,
-    {
-        let is_first = match path.split_off_first_mut() {
-            None => {
-                if let Self::Leaf(_) = node {
-                    return Ok(node);
+    fn get_leaf_at_impl<'a>(node: &'a Self, mut path: &mut [bool]) -> eyre::Result<&'a Self> {
+        match node {
+            Self::Leaf(_) if path.is_empty() => Ok(node),
+            Self::Branch { first, second, .. } if !path.is_empty() => {
+                let is_first = *path.split_off_first_mut().unwrap();
+                if is_first {
+                    Self::get_leaf_at_impl(first, path)
                 } else {
-                    return Err(eyre::eyre!("Path does not point to Leaf"));
+                    Self::get_leaf_at_impl(second, path)
                 }
             }
-            Some(v) => *v,
-        };
-
-        if let Self::Branch { first, second, .. } = node {
-            if is_first {
-                Self::get_leaf_at_impl(first, path)?;
-            } else {
-                Self::get_leaf_at_impl(second, path)?;
-            }
+            _ => Err(eyre::eyre!("Could not find leaf at specified path")),
         }
-        Err(eyre::eyre!("Path does not point to Leaf"))
     }
 
-    pub fn get_leaf_at(&self, path: &[bool]) -> eyre::Result<&Self>
-    where
-        L: Default,
-    {
-        let mut passvar = path.to_owned();
-        Self::get_leaf_at_impl(self, &mut passvar)
+    pub fn get_leaf_at(&self, path: &[bool]) -> eyre::Result<&Self> {
+        Self::get_leaf_at_impl(self, &mut path.to_owned())
     }
 
     pub fn collect_paths(&self) -> Vec<Vec<bool>> {
