@@ -3,7 +3,7 @@ use super::*;
 // Helper type alias for testing with unit data
 type TestBTree = BTreeNode<(), ()>;
 
-mod path_collection {
+mod inspect_tree {
     use super::*;
 
     impl TestBTree {
@@ -63,7 +63,7 @@ mod path_collection {
            vec![()              , ()               , ()               , ()                ],
            vec![               (),                (),                (),                  ],
     )] // equal branching
-    fn test_btree_returns_computed_paths_parametric(
+    fn test_btree(
         #[case] tree: BTreeNode,
         #[case] expected_paths: Vec<Vec<bool>>,
         #[case] expected_leaf_data: Vec<()>,
@@ -76,7 +76,7 @@ mod path_collection {
 
     // concrete (non-unit) types
     #[test]
-    fn test_btree_with_leaf_at_root_with_data_returns_computed_paths() {
+    fn test_btree_with_data_on_leaf() {
         let tree = BTreeNode::<i32>::Leaf(42);
 
         let paths = tree.collect_paths();
@@ -89,7 +89,7 @@ mod path_collection {
     }
 
     #[test]
-    fn test_btree_with_simple_branch_with_data_at_root_returns_computed_paths() {
+    fn test_btree_with_data_on_branch() {
         let tree = BTreeNode::Branch {
             first: Box::new(BTreeNode::Leaf(())),
             second: Box::new(BTreeNode::Leaf(())),
@@ -106,7 +106,7 @@ mod path_collection {
     }
 }
 
-mod create_from_spec {
+mod construct_from_spec {
     use super::*;
 
     impl TestBTree {
@@ -126,7 +126,7 @@ mod create_from_spec {
     #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false]]))] // first-heavy branching
     #[case(TestBTree::spec_from(vec![vec![true], vec![false, true], vec![false, false]]))] // second-heavy branching
     #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]]))] // second-heavy branching
-    fn test_btree_returns_computed_paths_parametric(#[case] spec: BTreeSpec) {
+    fn test_btree(#[case] spec: BTreeSpec) {
         let tree = BTreeNode::<(), ()>::from_spec(&spec).unwrap();
         assert_eq!(tree.collect_paths(), spec.leaf_paths);
         assert_eq!(tree.collect_leaf_data(), spec.leaf_data);
