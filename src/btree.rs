@@ -109,10 +109,14 @@ impl<L, B> BTreeNode<L, B> {
         }
 
         let mut leaf_data_iter = leaf_data.iter();
-        Self::assign_data(&mut tree, &mut leaf_data_iter, &mut branch_data.iter())?;
+        let mut branch_data_iter = branch_data.iter();
+        Self::assign_data(&mut tree, &mut leaf_data_iter, &mut branch_data_iter)?;
 
         if leaf_data_iter.next().is_some() {
             return Err(eyre::eyre!("Remaining unused leaf data"));
+        }
+        if branch_data_iter.next().is_some() {
+            return Err(eyre::eyre!("Remaining unused branch data"));
         }
 
         Ok(tree)

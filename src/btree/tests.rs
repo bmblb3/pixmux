@@ -173,6 +173,13 @@ mod construct_from_spec {
             branch_data: vec![],
         }, "Prematurely exhausted branch data"
     )]
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![vec![true], vec![false]],
+            leaf_data: vec![(),()],
+            branch_data: vec![(),()],
+        }, "Remaining unused branch data"
+    )]
     fn test_btree_fails(#[case] spec: BTreeSpec, #[case] expected_error_msg: String) {
         let result = BTreeNode::from_spec(&spec);
         let actual_error_msg = result.unwrap_err().to_string();
