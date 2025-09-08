@@ -133,5 +133,17 @@ mod create_from_spec {
                 .collect_paths(),
             spec.leaf_paths
         );
+        assert_eq!(
+            BTreeNode::<(), ()>::from_spec(&spec)
+                .unwrap()
+                .collect_leaf_data(),
+            spec.leaf_data
+        );
+        assert_eq!(
+            BTreeNode::<(), ()>::from_spec(&spec)
+                .unwrap()
+                .collect_branch_data(),
+            spec.branch_data
+        );
     }
 }
