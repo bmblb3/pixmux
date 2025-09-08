@@ -6,6 +6,7 @@ pub struct BTreeSpec<L = (), B = ()> {
     pub branch_data: Vec<B>,
 }
 
+#[derive(Clone)]
 pub enum BTreeNode<L = (), B = ()> {
     Leaf(L),
     Branch {
@@ -26,12 +27,17 @@ impl<L, B> BTreeNode<L, B> {
         L: Clone,
         B: Clone,
     {
-        if !path.is_empty()
-            && let BTreeNode::Leaf(_) = node
-        {
+        if !path.is_empty() {
             let current = *path.split_off_first_mut().unwrap();
-            let mut first = BTreeNode::Leaf(leaf_data[0].clone());
-            let mut second = BTreeNode::Leaf(leaf_data[0].clone());
+
+            let (mut first, mut second) = match node {
+                BTreeNode::Leaf(_) => (
+                    BTreeNode::Leaf(leaf_data[0].clone()),
+                    BTreeNode::Leaf(leaf_data[0].clone()),
+                ),
+                BTreeNode::Branch { first, second, .. } => ((**first).clone(), (**second).clone()),
+            };
+
             if current {
                 Self::build_path(&mut first, path, leaf_data, branch_data)?;
             } else {

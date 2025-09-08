@@ -98,6 +98,11 @@ mod create_from_spec {
         leaf_data: vec![(), (), ()],
         branch_data: vec![(), ()],
     })] // first-heavy branching
+    #[case(BTreeSpec {
+        leaf_paths: vec![vec![true], vec![false, true], vec![false, false]],
+        leaf_data: vec![(), (), ()],
+        branch_data: vec![(), ()],
+    })] // second-heavy branching
     fn test_btree_returns_computed_paths_parametric(#[case] spec: BTreeSpec) {
         assert_eq!(
             BTreeNode::<(), ()>::from_spec(&spec)
