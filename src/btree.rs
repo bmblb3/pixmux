@@ -6,7 +6,6 @@ pub struct BTreeSpec<L = (), B = ()> {
     pub branch_data: Vec<B>,
 }
 
-#[derive(Clone)]
 pub enum BTreeNode<L = (), B = ()> {
     Leaf(L),
     Branch {
