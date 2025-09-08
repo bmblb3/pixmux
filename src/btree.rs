@@ -1,6 +1,6 @@
 use std::slice::Iter;
 
-use color_eyre::eyre::{self, Ok};
+use color_eyre::eyre::{self, Ok, OptionExt};
 
 pub struct BTreeSpec<L = (), B = ()> {
     pub leaf_paths: Vec<Vec<bool>>,
@@ -8,6 +8,7 @@ pub struct BTreeSpec<L = (), B = ()> {
     pub branch_data: Vec<B>,
 }
 
+#[derive(Debug)]
 pub enum BTreeNode<L = (), B = ()> {
     Leaf(L),
     Branch {
@@ -59,14 +60,20 @@ impl<L, B> BTreeNode<L, B> {
             }
         }
     }
-    fn assign_data(node: &mut Self, leaf_data_iter: &mut Iter<L>, branch_data_iter: &mut Iter<B>)
+    fn assign_data(
+        node: &mut Self,
+        leaf_data_iter: &mut Iter<L>,
+        branch_data_iter: &mut Iter<B>,
+    ) -> eyre::Result<()>
     where
         L: Clone,
         B: Clone,
     {
         match node {
             Self::Leaf(data) => {
-                let newdata = leaf_data_iter.next().unwrap();
+                let newdata = leaf_data_iter
+                    .next()
+                    .ok_or_eyre("Prematurely exhausted leaf data")?;
                 *data = newdata.clone();
             }
             Self::Branch {
@@ -76,10 +83,11 @@ impl<L, B> BTreeNode<L, B> {
             } => {
                 let newdata = branch_data_iter.next().unwrap();
                 *data = newdata.clone();
-                Self::assign_data(first, leaf_data_iter, branch_data_iter);
-                Self::assign_data(second, leaf_data_iter, branch_data_iter);
+                Self::assign_data(first, leaf_data_iter, branch_data_iter)?;
+                Self::assign_data(second, leaf_data_iter, branch_data_iter)?;
             }
         }
+        Ok(())
     }
 
     pub fn from_spec(spec: &BTreeSpec<L, B>) -> eyre::Result<Self>
@@ -98,7 +106,12 @@ impl<L, B> BTreeNode<L, B> {
             Self::default_from_path(&mut tree, &mut path.clone());
         }
 
-        Self::assign_data(&mut tree, &mut leaf_data.iter(), &mut branch_data.iter());
+        let mut leaf_data_iter = leaf_data.iter();
+        Self::assign_data(&mut tree, &mut leaf_data_iter, &mut branch_data.iter())?;
+
+        if leaf_data_iter.next().is_some() {
+            return Err(eyre::eyre!("Remaining unused leaf data"));
+        }
 
         Ok(tree)
     }

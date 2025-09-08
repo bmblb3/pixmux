@@ -150,4 +150,25 @@ mod construct_from_spec {
         assert_eq!(tree.collect_leaf_data(), spec.leaf_data);
         assert_eq!(tree.collect_branch_data(), spec.branch_data);
     }
+
+    #[rstest::rstest]
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![],
+            leaf_data: vec![],
+            branch_data: vec![],
+        }, "Prematurely exhausted leaf data"
+    )]
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![],
+            leaf_data: vec![(), ()],
+            branch_data: vec![],
+        }, "Remaining unused leaf data"
+    )]
+    fn test_btree_fails(#[case] spec: BTreeSpec, #[case] expected_error_msg: String) {
+        let result = BTreeNode::from_spec(&spec);
+        let actual_error_msg = result.unwrap_err().to_string();
+        assert_eq!(actual_error_msg, expected_error_msg);
+    }
 }
