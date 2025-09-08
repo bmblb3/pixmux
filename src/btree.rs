@@ -28,26 +28,24 @@ impl<L, B> BTreeNode<L, B> {
         B: Clone,
     {
         if !path.is_empty() {
-            let current = *path.split_off_first_mut().unwrap();
-
-            let (mut first, mut second) = match node {
-                BTreeNode::Leaf(_) => (
-                    BTreeNode::Leaf(leaf_data[0].clone()),
-                    BTreeNode::Leaf(leaf_data[0].clone()),
-                ),
-                BTreeNode::Branch { first, second, .. } => ((**first).clone(), (**second).clone()),
+            if let BTreeNode::Leaf(_) = node {
+                let first = BTreeNode::Leaf(leaf_data[0].clone());
+                let second = BTreeNode::Leaf(leaf_data[0].clone());
+                *node = BTreeNode::Branch {
+                    first: Box::new(first),
+                    second: Box::new(second),
+                    data: branch_data[0].clone(),
+                };
             };
 
-            if current {
-                Self::build_path(&mut first, path, leaf_data, branch_data)?;
-            } else {
-                Self::build_path(&mut second, path, leaf_data, branch_data)?;
+            if let BTreeNode::Branch { first, second, .. } = node {
+                let build_first_child = *path.split_off_first_mut().unwrap();
+                if build_first_child {
+                    Self::build_path(first, path, leaf_data, branch_data)?;
+                } else {
+                    Self::build_path(second, path, leaf_data, branch_data)?;
+                }
             }
-            *node = BTreeNode::Branch {
-                first: Box::new(first),
-                second: Box::new(second),
-                data: branch_data[0].clone(),
-            };
         };
         Ok(())
     }
@@ -64,7 +62,6 @@ impl<L, B> BTreeNode<L, B> {
         } = spec;
 
         let mut tree = Self::Leaf(leaf_data.first().unwrap().clone());
-        println!("Added leaf at tree");
         for path in leaf_paths {
             Self::build_path(
                 &mut tree,
