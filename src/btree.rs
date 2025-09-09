@@ -59,34 +59,41 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    fn assign_data(
-        node: &mut Self,
-        leaf_data_iter: &mut Iter<L>,
-        branch_data_iter: &mut Iter<B>,
-    ) -> eyre::Result<()>
+    fn assign_leaf_data(node: &mut Self, data_iter: &mut Iter<L>) -> eyre::Result<()>
     where
         L: Clone,
-        B: Clone,
     {
         match node {
             Self::Leaf(data) => {
-                let newdata = leaf_data_iter
+                let newdata = data_iter
                     .next()
                     .ok_or_eyre("Prematurely exhausted leaf data")?;
                 *data = newdata.clone();
             }
-            Self::Branch {
-                first,
-                second,
-                data,
-            } => {
-                let newdata = branch_data_iter
-                    .next()
-                    .ok_or_eyre("Prematurely exhausted branch data")?;
-                *data = newdata.clone();
-                Self::assign_data(first, leaf_data_iter, branch_data_iter)?;
-                Self::assign_data(second, leaf_data_iter, branch_data_iter)?;
+            Self::Branch { first, second, .. } => {
+                Self::assign_leaf_data(first, data_iter)?;
+                Self::assign_leaf_data(second, data_iter)?;
             }
+        }
+        Ok(())
+    }
+
+    fn assign_branch_data(node: &mut Self, data_iter: &mut Iter<B>) -> eyre::Result<()>
+    where
+        B: Clone,
+    {
+        if let Self::Branch {
+            first,
+            second,
+            data,
+        } = node
+        {
+            let newdata = data_iter
+                .next()
+                .ok_or_eyre("Prematurely exhausted branch data")?;
+            *data = newdata.clone();
+            Self::assign_branch_data(first, data_iter)?;
+            Self::assign_branch_data(second, data_iter)?;
         }
         Ok(())
     }
@@ -111,8 +118,10 @@ impl<L, B> BTreeNode<L, B> {
         }
 
         let mut leaf_data_iter = leaf_data.iter();
+        Self::assign_leaf_data(&mut tree, &mut leaf_data_iter)?;
+
         let mut branch_data_iter = branch_data.iter();
-        Self::assign_data(&mut tree, &mut leaf_data_iter, &mut branch_data_iter)?;
+        Self::assign_branch_data(&mut tree, &mut branch_data_iter)?;
 
         if leaf_data_iter.next().is_some() {
             return Err(eyre::eyre!("Remaining unused leaf data"));
