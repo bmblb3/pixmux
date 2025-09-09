@@ -185,29 +185,36 @@ mod construct_from_spec {
             leaf_paths: vec![vec![true]],
             leaf_data: vec![()],
             branch_data: vec![],
-        }, "Invalid path spec"
-    )]
+        }, "Non-canonical/invalid path spec"
+    )] // only left arm of branch defined
     #[case(
         BTreeSpec {
             leaf_paths: vec![vec![false]],
             leaf_data: vec![()],
             branch_data: vec![],
-        }, "Invalid path spec"
-    )]
+        }, "Non-canonical/invalid path spec"
+    )] // only right arm of branch defined
     #[case(
         BTreeSpec {
             leaf_paths: vec![],
             leaf_data: vec![],
             branch_data: vec![],
-        }, "Invalid path spec"
-    )]
+        }, "Non-canonical/invalid path spec"
+    )] // empty everything
     #[case(
         BTreeSpec {
-            leaf_paths: vec![vec![true], vec![true], vec![false]],
+            leaf_paths: vec![vec![], vec![true], vec![false]],
             leaf_data: vec![(),(),()],
             branch_data: vec![()],
-        }, "Invalid path spec"
-    )]
+        }, "Non-canonical/invalid path spec"
+    )] // branch where a leaf was already specified
+    #[case(
+        BTreeSpec {
+            leaf_paths: vec![vec![true], vec![false], vec![]],
+            leaf_data: vec![(),(),()],
+            branch_data: vec![()],
+        }, "Non-canonical/invalid path spec"
+    )] // leaf where a branch was already specified
     fn test_btree_fails(#[case] spec: BTreeSpec, #[case] expected_error_msg: String) {
         let result = BTreeNode::from_spec(&spec);
         let actual_error_msg = result.unwrap_err().to_string();

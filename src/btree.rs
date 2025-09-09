@@ -38,7 +38,7 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    fn default_from_path(node: &mut Self, path: &[bool])
+    fn default_from_path(node: &mut Self, path: &[bool]) -> eyre::Result<()>
     where
         L: Clone + Default,
         B: Clone + Default,
@@ -48,11 +48,15 @@ impl<L, B> BTreeNode<L, B> {
             Self::Leaf(_) => {
                 *node = Self::default_branch();
             }
+            Self::Branch { .. } if path.is_empty() => {
+                return Err(eyre::eyre!("Non-canonical/invalid path spec"));
+            }
             Self::Branch { first, second, .. } => {
                 let child = if path[0] { first } else { second };
-                Self::default_from_path(child, &path[1..])
+                Self::default_from_path(child, &path[1..])?
             }
-        }
+        };
+        Ok(())
     }
 
     fn assign_leaf_data(node: &mut Self, data_iter: &mut Iter<L>) -> eyre::Result<()>
@@ -107,10 +111,10 @@ impl<L, B> BTreeNode<L, B> {
 
         let mut tree = Self::Leaf(L::default());
         for path in leaf_paths {
-            Self::default_from_path(&mut tree, path);
+            Self::default_from_path(&mut tree, path)?;
         }
         if tree.collect_paths() != *leaf_paths {
-            return Err(eyre::eyre!("Invalid path spec"));
+            return Err(eyre::eyre!("Non-canonical/invalid path spec"));
         }
 
         let mut leaf_data_iter = leaf_data.iter();
