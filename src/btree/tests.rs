@@ -266,31 +266,74 @@ mod split_at {
     use super::*;
 
     #[rstest::rstest]
-    #[case(TestBTree::spec_from(vec![vec![]]),
+    #[case(TestBTree::spec_from(vec![
+            vec![]
+        ]),
         vec![
             vec![vec![true], vec![false]]
         ]
     )] // leaf at root
-    // #[case(BTreeSpec {
-    //     leaf_paths: vec![vec![true], vec![false]],
-    //     leaf_data: vec![1, 2],
-    //     branch_data: vec![()],
-    // })] // end-branch at root
-    // #[case(BTreeSpec {
-    //     leaf_paths: vec![vec![true, true], vec![true, false], vec![false]],
-    //     leaf_data: vec![1, 2, 3],
-    //     branch_data: vec![(), ()],
-    // })] // first-heavy branching
-    // #[case(BTreeSpec {
-    //     leaf_paths: vec![vec![true], vec![false, true], vec![false, false]],
-    //     leaf_data: vec![1, 2, 3],
-    //     branch_data: vec![(), ()],
-    // })] // second-heavy branching
-    // #[case(BTreeSpec {
-    //     leaf_paths: vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]],
-    //     leaf_data: vec![1, 2, 3, 4],
-    //     branch_data: vec![(), (), ()],
-    // })] // second-heavy branching
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false]
+        ]),
+        vec![
+            vec![vec![true, true], vec![true, false], vec![false]],
+            vec![vec![true], vec![false, true], vec![false, false]]
+        ]
+    )] // end-branch at root
+    #[case(TestBTree::spec_from(vec![
+            vec![true, true],
+            vec![true, false],
+            vec![false],
+        ]),
+        vec![
+            vec![
+                vec![true, true, true],
+                vec![true, true, false],
+                vec![true, false],
+                vec![false],
+            ],
+            vec![
+                vec![true, true],
+                vec![true, false, true],
+                vec![true, false, false],
+                vec![false],
+            ],
+            vec![
+                vec![true, true],
+                vec![true, false],
+                vec![false, true],
+                vec![false, false],
+            ],
+        ]
+    )] // first-heavy branching
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false, true],
+            vec![false, false]
+        ]),
+        vec![
+            vec![
+                vec![true, true],
+                vec![true, false],
+                vec![false, true],
+                vec![false, false],
+            ],
+            vec![
+                vec![true],
+                vec![false, true, true],
+                vec![false, true, false],
+                vec![false, false],
+            ],
+            vec![
+                vec![true],
+                vec![false, true],
+                vec![false, false, true],
+                vec![false, false, false],
+            ],
+        ]
+    )] // second-heavy branching
     fn test_btree(#[case] spec: BTreeSpec<(), ()>, #[case] split_paths: Vec<Vec<Vec<bool>>>) {
         for (mut path, expected_paths) in spec.leaf_paths.iter().zip(split_paths) {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
