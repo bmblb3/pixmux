@@ -137,6 +137,22 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
+    pub fn get_leaf_at_mut(&mut self, path: &[bool]) -> eyre::Result<&mut Self> {
+        match path {
+            [] => match self {
+                Self::Leaf(_) => Ok(self),
+                _ => Err(eyre::eyre!("Could not find leaf at specified path")),
+            },
+            [head, tail @ ..] => match self {
+                Self::Branch { first, second, .. } => {
+                    let child = if *head { first } else { second };
+                    child.get_leaf_at_mut(tail)
+                }
+                _ => Err(eyre::eyre!("Could not find leaf at specified path")),
+            },
+        }
+    }
+
     pub fn collect_paths(&self) -> Vec<Vec<bool>> {
         let mut all_paths = Vec::new();
         self.collect_paths_impl(&mut Vec::new(), &mut all_paths);
@@ -203,6 +219,16 @@ impl<L, B> BTreeNode<L, B> {
                 second.collect_branch_data_impl(branch_data);
             }
         }
+    }
+
+    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>) -> eyre::Result<()>
+    where
+        L: Default,
+        B: Default,
+    {
+        let leaf = self.get_leaf_at_mut(path)?;
+        *leaf = Self::default_branch();
+        Ok(())
     }
 }
 
