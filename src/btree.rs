@@ -226,14 +226,15 @@ impl<L, B> BTreeNode<L, B> {
         L: Default + Clone,
         B: Default,
     {
-        let leaf = self.get_leaf_at_mut(path)?;
-        let leaf_data = if let Self::Leaf(data) = leaf {
-            data.clone()
-        } else {
-            return Err(eyre::eyre!("Not a leaf"));
-        };
-        *leaf = Self::default_branch();
-        Self::assign_leaf_data(leaf, &mut [leaf_data.clone(), leaf_data].iter())?;
+        let data = self
+            .get_leaf_at(path)?
+            .collect_leaf_data()
+            .first()
+            .unwrap()
+            .clone();
+        let leaf_mut = self.get_leaf_at_mut(path)?;
+        *leaf_mut = Self::default_branch();
+        Self::assign_leaf_data(leaf_mut, &mut vec![data.clone(); 2].iter())?;
         Ok(())
     }
 }

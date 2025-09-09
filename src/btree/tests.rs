@@ -125,7 +125,7 @@ mod construct_from_spec {
     #[case(TestBTree::spec_from(vec![vec![true], vec![false]]))] // end-branch at root
     #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false]]))] // first-heavy branching
     #[case(TestBTree::spec_from(vec![vec![true], vec![false, true], vec![false, false]]))] // second-heavy branching
-    #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]]))] // second-heavy branching
+    #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]]))] // equally deep branching
     fn test_btree(#[case] spec: BTreeSpec) {
         let tree = BTreeNode::<(), ()>::from_spec(&spec).unwrap();
         assert_eq!(tree.collect_paths(), spec.leaf_paths);
@@ -250,7 +250,7 @@ mod extract_leaf_at {
         leaf_paths: vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]],
         leaf_data: vec![1, 2, 3, 4],
         branch_data: vec![(), (), ()],
-    })] // second-heavy branching
+    })] // equally deep branching
     fn test_btree(#[case] spec: BTreeSpec<i8, ()>) {
         let tree = BTreeNode::from_spec(&spec).unwrap();
         for (path, expected_data) in spec.leaf_paths.iter().zip(spec.leaf_data) {
@@ -354,6 +354,19 @@ mod split_at {
             vec![1, 1]
         ]
     )] // leaf at root
+    #[case(BTreeSpec {
+        leaf_paths: vec![
+                vec![true],
+                vec![false]
+            ],
+        leaf_data: vec![1, 2],
+        branch_data: vec![()],
+        },
+        vec![
+            vec![1, 1, 2],
+            vec![1, 2, 2]
+        ]
+    )] // branch_at_root
     fn test_btree_with_data(
         #[case] spec: BTreeSpec<i8, ()>,
         #[case] expected_post_split_leaf_datas: Vec<Vec<i8>>,
