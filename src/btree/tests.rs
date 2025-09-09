@@ -341,4 +341,29 @@ mod split_at {
             assert_eq!(tree.collect_paths(), expected_paths);
         }
     }
+
+    #[rstest::rstest]
+    #[case(BTreeSpec {
+        leaf_paths: vec![
+                vec![]
+            ],
+        leaf_data: vec![1],
+        branch_data: vec![],
+        },
+        vec![
+            vec![1, 1]
+        ]
+    )] // leaf at root
+    fn test_btree_with_data(
+        #[case] spec: BTreeSpec<i8, ()>,
+        #[case] expected_post_split_leaf_datas: Vec<Vec<i8>>,
+    ) {
+        for (mut path, expected_leaf_data) in
+            spec.leaf_paths.iter().zip(expected_post_split_leaf_datas)
+        {
+            let mut tree = BTreeNode::from_spec(&spec).unwrap();
+            tree.split_leaf_at(&mut path).unwrap();
+            assert_eq!(tree.collect_leaf_data(), expected_leaf_data);
+        }
+    }
 }

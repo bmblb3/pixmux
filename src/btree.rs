@@ -223,11 +223,17 @@ impl<L, B> BTreeNode<L, B> {
 
     pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>) -> eyre::Result<()>
     where
-        L: Default,
+        L: Default + Clone,
         B: Default,
     {
         let leaf = self.get_leaf_at_mut(path)?;
+        let leaf_data = if let Self::Leaf(data) = leaf {
+            data.clone()
+        } else {
+            return Err(eyre::eyre!("Not a leaf"));
+        };
         *leaf = Self::default_branch();
+        Self::assign_leaf_data(leaf, &mut [leaf_data.clone(), leaf_data].iter())?;
         Ok(())
     }
 }
