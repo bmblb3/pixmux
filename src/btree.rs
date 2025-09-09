@@ -232,15 +232,16 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>) -> eyre::Result<()>
+    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>, branch_data: B) -> eyre::Result<()>
     where
         L: Default + Clone,
-        B: Default,
+        B: Default + Clone,
     {
         let data = self.get_leaf_data_at(path)?.clone();
         let leaf_mut = self.get_leaf_at_mut(path)?;
         *leaf_mut = Self::default_branch();
         leaf_mut.assign_leaf_data(&mut vec![data.clone(); 2].iter())?;
+        leaf_mut.assign_branch_data(&mut vec![branch_data; 1].iter())?;
         Ok(())
     }
 }

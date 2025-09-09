@@ -337,7 +337,7 @@ mod split_at {
     fn test_btree(#[case] spec: BTreeSpec<(), ()>, #[case] split_paths: Vec<Vec<Vec<bool>>>) {
         for (mut path, expected_paths) in spec.leaf_paths.iter().zip(split_paths) {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
-            tree.split_leaf_at(&mut path).unwrap();
+            tree.split_leaf_at(&mut path, ()).unwrap();
             assert_eq!(tree.collect_paths(), expected_paths);
         }
     }
@@ -352,31 +352,66 @@ mod split_at {
         },
         vec![
             vec![1, 1]
+        ],
+        vec![
+            vec![5]
         ]
     )] // leaf at root
     #[case(BTreeSpec {
         leaf_paths: vec![
                 vec![true],
-                vec![false]
+                vec![false],
             ],
         leaf_data: vec![1, 2],
-        branch_data: vec![()],
+        branch_data: vec![10],
         },
         vec![
             vec![1, 1, 2],
-            vec![1, 2, 2]
+            vec![1, 2, 2],
+        ],
+        vec![
+            vec![10, 5],
+            vec![10, 5],
+        ]
+    )] // branch_at_root
+    #[case(BTreeSpec {
+        leaf_paths: vec![
+                vec![true, true],
+                vec![true, false],
+                vec![false, true],
+                vec![false, false],
+            ],
+        leaf_data: vec![1, 2, 3, 4],
+        branch_data: vec![10, 11, 12],
+        },
+        vec![
+            vec![1, 1, 2, 3, 4],
+            vec![1, 2, 2, 3, 4],
+            vec![1, 2, 3, 3, 4],
+            vec![1, 2, 3, 4, 4],
+        ],
+        vec![
+            vec![10, 11, 5, 12],
+            vec![10, 11, 5, 12],
+            vec![10, 11, 12, 5],
+            vec![10, 11, 12, 5],
         ]
     )] // branch_at_root
     fn test_btree_with_data(
-        #[case] spec: BTreeSpec<i8, ()>,
+        #[case] spec: BTreeSpec<i8, i8>,
         #[case] expected_post_split_leaf_datas: Vec<Vec<i8>>,
+        #[case] expected_post_split_branch_datas: Vec<Vec<i8>>,
     ) {
-        for (mut path, expected_leaf_data) in
-            spec.leaf_paths.iter().zip(expected_post_split_leaf_datas)
+        for ((mut path, expected_leaf_data), expected_branch_data) in spec
+            .leaf_paths
+            .iter()
+            .zip(expected_post_split_leaf_datas)
+            .zip(expected_post_split_branch_datas)
         {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
-            tree.split_leaf_at(&mut path).unwrap();
+            tree.split_leaf_at(&mut path, 5).unwrap();
             assert_eq!(tree.collect_leaf_data(), expected_leaf_data);
+            assert_eq!(tree.collect_branch_data(), expected_branch_data);
         }
     }
 }
