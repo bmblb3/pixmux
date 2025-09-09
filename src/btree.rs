@@ -59,11 +59,11 @@ impl<L, B> BTreeNode<L, B> {
         Ok(())
     }
 
-    fn assign_leaf_data(node: &mut Self, data_iter: &mut Iter<L>) -> eyre::Result<()>
+    fn assign_leaf_data(&mut self, data_iter: &mut Iter<L>) -> eyre::Result<()>
     where
         L: Clone,
     {
-        match node {
+        match self {
             Self::Leaf(data) => {
                 let new_data = data_iter
                     .next()
@@ -71,14 +71,14 @@ impl<L, B> BTreeNode<L, B> {
                 *data = new_data.clone();
             }
             Self::Branch { first, second, .. } => {
-                Self::assign_leaf_data(first, data_iter)?;
-                Self::assign_leaf_data(second, data_iter)?;
+                first.assign_leaf_data(data_iter)?;
+                second.assign_leaf_data(data_iter)?;
             }
         }
         Ok(())
     }
 
-    fn assign_branch_data(node: &mut Self, data_iter: &mut Iter<B>) -> eyre::Result<()>
+    fn assign_branch_data(&mut self, data_iter: &mut Iter<B>) -> eyre::Result<()>
     where
         B: Clone,
     {
@@ -86,14 +86,14 @@ impl<L, B> BTreeNode<L, B> {
             first,
             second,
             data,
-        } = node
+        } = self
         {
             let new_data = data_iter
                 .next()
                 .ok_or_eyre("Prematurely exhausted branch data")?;
             *data = new_data.clone();
-            Self::assign_branch_data(first, data_iter)?;
-            Self::assign_branch_data(second, data_iter)?;
+            first.assign_branch_data(data_iter)?;
+            second.assign_branch_data(data_iter)?;
         }
         Ok(())
     }
@@ -112,13 +112,13 @@ impl<L, B> BTreeNode<L, B> {
         }
 
         let mut leaf_data_iter = spec.leaf_data.iter();
-        Self::assign_leaf_data(&mut tree, &mut leaf_data_iter)?;
+        tree.assign_leaf_data(&mut leaf_data_iter)?;
         if leaf_data_iter.next().is_some() {
             return Err(eyre::eyre!("Remaining unused leaf data"));
         }
 
         let mut branch_data_iter = spec.branch_data.iter();
-        Self::assign_branch_data(&mut tree, &mut branch_data_iter)?;
+        tree.assign_branch_data(&mut branch_data_iter)?;
         if branch_data_iter.next().is_some() {
             return Err(eyre::eyre!("Remaining unused branch data"));
         }
@@ -132,6 +132,17 @@ impl<L, B> BTreeNode<L, B> {
             (Self::Branch { first, second, .. }, [head, tail @ ..]) => {
                 let child = if *head { first } else { second };
                 child.get_leaf_at(tail)
+            }
+            _ => Err(eyre::eyre!("Could not find leaf at specified path")),
+        }
+    }
+
+    fn get_leaf_data_at(&self, path: &[bool]) -> eyre::Result<&L> {
+        match (self, path) {
+            (Self::Leaf(data), []) => Ok(data),
+            (Self::Branch { first, second, .. }, [head, tail @ ..]) => {
+                let child = if *head { first } else { second };
+                child.get_leaf_data_at(tail)
             }
             _ => Err(eyre::eyre!("Could not find leaf at specified path")),
         }
@@ -226,15 +237,10 @@ impl<L, B> BTreeNode<L, B> {
         L: Default + Clone,
         B: Default,
     {
-        let data = self
-            .get_leaf_at(path)?
-            .collect_leaf_data()
-            .first()
-            .unwrap()
-            .clone();
+        let data = self.get_leaf_data_at(path)?.clone();
         let leaf_mut = self.get_leaf_at_mut(path)?;
         *leaf_mut = Self::default_branch();
-        Self::assign_leaf_data(leaf_mut, &mut vec![data.clone(); 2].iter())?;
+        leaf_mut.assign_leaf_data(&mut vec![data.clone(); 2].iter())?;
         Ok(())
     }
 }
