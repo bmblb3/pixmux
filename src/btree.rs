@@ -38,7 +38,7 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    fn default_from_path(node: &mut Self, mut path: &mut [bool])
+    fn default_from_path(node: &mut Self, path: &[bool])
     where
         L: Clone + Default,
         B: Clone + Default,
@@ -49,12 +49,8 @@ impl<L, B> BTreeNode<L, B> {
                 *node = Self::default_branch();
             }
             Self::Branch { first, second, .. } => {
-                let is_first = *path.split_off_first_mut().unwrap();
-                if is_first {
-                    Self::default_from_path(first, path)
-                } else {
-                    Self::default_from_path(second, path)
-                }
+                let child = if path[0] { first } else { second };
+                Self::default_from_path(child, &path[1..])
             }
         }
     }
@@ -111,7 +107,7 @@ impl<L, B> BTreeNode<L, B> {
 
         let mut tree = Self::Leaf(L::default());
         for path in leaf_paths {
-            Self::default_from_path(&mut tree, &mut path.clone());
+            Self::default_from_path(&mut tree, path);
         }
         if tree.collect_paths() != *leaf_paths {
             return Err(eyre::eyre!("Invalid path spec"));
