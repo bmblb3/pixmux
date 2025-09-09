@@ -130,11 +130,11 @@ impl<L, B> BTreeNode<L, B> {
     }
 
     fn get_leaf_at_impl<'a>(node: &'a Self, path: &[bool]) -> eyre::Result<&'a Self> {
-        match node {
-            Self::Leaf(_) if path.is_empty() => Ok(node),
-            Self::Branch { first, second, .. } if !path.is_empty() => {
-                let child = if path[0] { first } else { second };
-                Self::get_leaf_at_impl(child, &path[1..])
+        match (node, path) {
+            (Self::Leaf(_), []) => Ok(node),
+            (Self::Branch { first, second, .. }, [head, tail @ ..]) => {
+                let child = if *head { first } else { second };
+                Self::get_leaf_at_impl(child, tail)
             }
             _ => Err(eyre::eyre!("Could not find leaf at specified path")),
         }
