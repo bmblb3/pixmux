@@ -8,7 +8,7 @@ pub struct BTreeSpec<L = (), B = ()> {
     pub branch_data: Vec<B>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BTreeNode<L = (), B = ()> {
     Leaf(L),
     Branch {
@@ -245,8 +245,57 @@ impl<L, B> BTreeNode<L, B> {
         Ok(())
     }
 
-    pub fn remove_leaf_at(&mut self, _path: &mut &Vec<bool>) -> eyre::Result<()> {
-        Ok(())
+    fn get_branch_at_mut(&mut self, path: &[bool]) -> eyre::Result<&mut Self> {
+        match path {
+            [] => {
+                if let Self::Branch { .. } = self {
+                    Ok(self)
+                } else {
+                    Err(eyre::eyre!("Did not end up at a branch!"))
+                }
+            }
+            [head, tail @ ..] => {
+                if let Self::Branch { first, second, .. } = self {
+                    let child = if *head { first } else { second };
+                    child.get_branch_at_mut(tail)
+                } else {
+                    Err(eyre::eyre!("Reached a leaf before end of path"))
+                }
+            }
+        }
+    }
+
+    pub fn remove_leaf_at(&mut self, path: &mut &Vec<bool>) -> eyre::Result<()>
+    where
+        L: Default + Clone,
+        B: Default + Clone,
+    {
+        match path.as_slice() {
+            [] => Ok(()),
+            [is_this_first] => {
+                if let Self::Branch { first, second, .. } = self {
+                    let promoted_child = if *is_this_first {
+                        second.clone()
+                    } else {
+                        first.clone()
+                    };
+                    *self = *promoted_child;
+                }
+                Ok(())
+            }
+            [head @ .., is_this_first] => {
+                let parent_mut = self.get_branch_at_mut(head)?;
+                if let Self::Branch { first, second, .. } = parent_mut {
+                    let promoted_child = if *is_this_first {
+                        second.clone()
+                    } else {
+                        first.clone()
+                    };
+                    *parent_mut = *promoted_child;
+                }
+                Ok(())
+            }
+        }
     }
 }
 
