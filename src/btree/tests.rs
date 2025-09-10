@@ -415,3 +415,23 @@ mod split_at {
         }
     }
 }
+
+mod remove_at {
+    use super::*;
+
+    #[rstest::rstest]
+    #[case(TestBTree::spec_from(vec![
+            vec![]
+        ]),
+        vec![
+            vec![vec![]]
+        ]
+    )] // leaf at root
+    fn test_btree(#[case] spec: BTreeSpec<(), ()>, #[case] post_remove_paths: Vec<Vec<Vec<bool>>>) {
+        for (mut path, expected_paths) in spec.leaf_paths.iter().zip(post_remove_paths) {
+            let mut tree = BTreeNode::from_spec(&spec).unwrap();
+            tree.remove_leaf_at(&mut path).unwrap();
+            assert_eq!(tree.collect_paths(), expected_paths);
+        }
+    }
+}

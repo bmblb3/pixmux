@@ -244,6 +244,10 @@ impl<L, B> BTreeNode<L, B> {
         leaf_mut.assign_branch_data(&mut vec![branch_data; 1].iter())?;
         Ok(())
     }
+
+    pub fn remove_leaf_at(&mut self, _path: &mut &Vec<bool>) -> eyre::Result<()> {
+        Ok(())
+    }
 }
 
 #[cfg(test)]
