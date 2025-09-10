@@ -1,6 +1,4 @@
-use std::slice::Iter;
-
-use color_eyre::eyre::{self, Ok, OptionExt};
+use color_eyre::eyre::{Ok, Result, bail};
 
 pub struct BTreeSpec<L = (), B = ()> {
     pub leaf_paths: Vec<Vec<bool>>,
@@ -38,136 +36,109 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    fn default_from_path(node: &mut Self, path: &[bool]) -> eyre::Result<()>
+    fn default_from_path(node: &mut Self, path: &[bool]) -> Result<()>
     where
-        L: Clone + Default,
-        B: Clone + Default,
+        L: Default,
+        B: Default,
     {
+        if path.is_empty() {
+            if let Self::Branch { .. } = node {
+                bail!("Non-canonical/invalid path spec")
+            } else {
+                return Ok(());
+            }
+        }
+
         match node {
-            Self::Leaf(_) if path.is_empty() => {}
             Self::Leaf(_) => {
                 *node = Self::default_branch();
-            }
-            Self::Branch { .. } if path.is_empty() => {
-                return Err(eyre::eyre!("Non-canonical/invalid path spec"));
+                Ok(())
             }
             Self::Branch { first, second, .. } => {
                 let child = if path[0] { first } else { second };
-                Self::default_from_path(child, &path[1..])?
-            }
-        };
-        Ok(())
-    }
-
-    fn assign_leaf_data(&mut self, data_iter: &mut Iter<L>) -> eyre::Result<()>
-    where
-        L: Clone,
-    {
-        match self {
-            Self::Leaf(data) => {
-                let new_data = data_iter
-                    .next()
-                    .ok_or_eyre("Prematurely exhausted leaf data")?;
-                *data = new_data.clone();
-            }
-            Self::Branch { first, second, .. } => {
-                first.assign_leaf_data(data_iter)?;
-                second.assign_leaf_data(data_iter)?;
+                Self::default_from_path(child, &path[1..])
             }
         }
-        Ok(())
     }
 
-    fn assign_branch_data(&mut self, data_iter: &mut Iter<B>) -> eyre::Result<()>
-    where
-        B: Clone,
-    {
+    fn collect_leaf_data_mut(&mut self) -> Vec<&mut L> {
+        let mut leaf_data = Vec::new();
+        self.collect_leaf_data_mut_impl(&mut leaf_data);
+        leaf_data
+    }
+
+    fn collect_leaf_data_mut_impl<'a>(&'a mut self, leaf_data: &mut Vec<&'a mut L>) {
+        match self {
+            Self::Leaf(data) => leaf_data.push(data),
+            Self::Branch { first, second, .. } => {
+                first.collect_leaf_data_mut_impl(leaf_data);
+                second.collect_leaf_data_mut_impl(leaf_data);
+            }
+        }
+    }
+
+    fn collect_branch_data_mut(&mut self) -> Vec<&mut B> {
+        let mut branch_data = Vec::new();
+        self.collect_branch_data_mut_impl(&mut branch_data);
+        branch_data
+    }
+
+    fn collect_branch_data_mut_impl<'a>(&'a mut self, branch_data: &mut Vec<&'a mut B>) {
         if let Self::Branch {
             first,
             second,
             data,
         } = self
         {
-            let new_data = data_iter
-                .next()
-                .ok_or_eyre("Prematurely exhausted branch data")?;
-            *data = new_data.clone();
-            first.assign_branch_data(data_iter)?;
-            second.assign_branch_data(data_iter)?;
+            branch_data.push(data);
+            first.collect_branch_data_mut_impl(branch_data);
+            second.collect_branch_data_mut_impl(branch_data);
         }
-        Ok(())
     }
 
-    pub fn from_spec(spec: &BTreeSpec<L, B>) -> eyre::Result<Self>
+    fn assign_leaf_data(&mut self, new_data: &[L]) -> Result<()>
     where
-        L: Clone + Default,
-        B: Clone + Default,
+        L: Clone,
     {
-        let mut tree = Self::Leaf(L::default());
-        for path in &spec.leaf_paths {
-            Self::default_from_path(&mut tree, path)?;
-        }
-        if tree.collect_paths() != spec.leaf_paths {
-            return Err(eyre::eyre!("Non-canonical/invalid path spec"));
-        }
-
-        let mut leaf_data_iter = spec.leaf_data.iter();
-        tree.assign_leaf_data(&mut leaf_data_iter)?;
-        if leaf_data_iter.next().is_some() {
-            return Err(eyre::eyre!("Remaining unused leaf data"));
-        }
-
-        let mut branch_data_iter = spec.branch_data.iter();
-        tree.assign_branch_data(&mut branch_data_iter)?;
-        if branch_data_iter.next().is_some() {
-            return Err(eyre::eyre!("Remaining unused branch data"));
-        }
-
-        Ok(tree)
-    }
-
-    pub fn get_leaf_at(&self, path: &[bool]) -> eyre::Result<&Self> {
-        match (self, path) {
-            (Self::Leaf(_), []) => Ok(self),
-            (Self::Branch { first, second, .. }, [head, tail @ ..]) => {
-                let child = if *head { first } else { second };
-                child.get_leaf_at(tail)
+        let mut existing_data_mut = self.collect_leaf_data_mut();
+        if new_data.len() > existing_data_mut.len() {
+            bail!("Remaining unused leaf data")
+        } else if new_data.len() < existing_data_mut.len() {
+            bail!("Prematurely exhausted leaf data")
+        } else {
+            for (src, dst) in new_data.iter().zip(&mut existing_data_mut) {
+                **dst = src.clone();
             }
-            _ => Err(eyre::eyre!("Could not find leaf at specified path")),
+            Ok(())
         }
     }
 
-    fn get_leaf_data_at(&self, path: &[bool]) -> eyre::Result<&L> {
+    fn assign_branch_data(&mut self, new_data: &[B]) -> Result<()>
+    where
+        B: Clone,
+    {
+        let mut existing_data_mut = self.collect_branch_data_mut();
+        if new_data.len() > existing_data_mut.len() {
+            bail!("Remaining unused branch data")
+        } else if new_data.len() < existing_data_mut.len() {
+            bail!("Prematurely exhausted branch data")
+        } else {
+            for (src, dst) in new_data.iter().zip(&mut existing_data_mut) {
+                **dst = src.clone();
+            }
+            Ok(())
+        }
+    }
+
+    fn get_leaf_data_at(&self, path: &[bool]) -> Result<&L> {
         match (self, path) {
             (Self::Leaf(data), []) => Ok(data),
             (Self::Branch { first, second, .. }, [head, tail @ ..]) => {
                 let child = if *head { first } else { second };
                 child.get_leaf_data_at(tail)
             }
-            _ => Err(eyre::eyre!("Could not find leaf at specified path")),
+            _ => bail!("Could not find leaf at specified path"),
         }
-    }
-
-    pub fn get_leaf_at_mut(&mut self, path: &[bool]) -> eyre::Result<&mut Self> {
-        match path {
-            [] => match self {
-                Self::Leaf(_) => Ok(self),
-                _ => Err(eyre::eyre!("Could not find leaf at specified path")),
-            },
-            [head, tail @ ..] => match self {
-                Self::Branch { first, second, .. } => {
-                    let child = if *head { first } else { second };
-                    child.get_leaf_at_mut(tail)
-                }
-                _ => Err(eyre::eyre!("Could not find leaf at specified path")),
-            },
-        }
-    }
-
-    pub fn collect_paths(&self) -> Vec<Vec<bool>> {
-        let mut all_paths = Vec::new();
-        self.collect_paths_impl(&mut Vec::new(), &mut all_paths);
-        all_paths
     }
 
     fn collect_paths_impl(&self, current_path: &mut Vec<bool>, all_paths: &mut Vec<Vec<bool>>) {
@@ -183,15 +154,6 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    pub fn collect_leaf_data(&self) -> Vec<L>
-    where
-        L: Clone,
-    {
-        let mut leaf_data = Vec::new();
-        self.collect_leaf_data_impl(&mut leaf_data);
-        leaf_data
-    }
-
     fn collect_leaf_data_impl(&self, leaf_data: &mut Vec<L>)
     where
         L: Clone,
@@ -203,15 +165,6 @@ impl<L, B> BTreeNode<L, B> {
                 second.collect_leaf_data_impl(leaf_data);
             }
         }
-    }
-
-    pub fn collect_branch_data(&self) -> Vec<B>
-    where
-        B: Clone,
-    {
-        let mut branch_data = Vec::new();
-        self.collect_branch_data_impl(&mut branch_data);
-        branch_data
     }
 
     fn collect_branch_data_impl(&self, branch_data: &mut Vec<B>)
@@ -232,26 +185,13 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>, branch_data: B) -> eyre::Result<()>
-    where
-        L: Default + Clone,
-        B: Default + Clone,
-    {
-        let data = self.get_leaf_data_at(path)?.clone();
-        let leaf_mut = self.get_leaf_at_mut(path)?;
-        *leaf_mut = Self::default_branch();
-        leaf_mut.assign_leaf_data(&mut vec![data.clone(); 2].iter())?;
-        leaf_mut.assign_branch_data(&mut vec![branch_data; 1].iter())?;
-        Ok(())
-    }
-
-    fn get_branch_at_mut(&mut self, path: &[bool]) -> eyre::Result<&mut Self> {
+    fn get_branch_at_mut(&mut self, path: &[bool]) -> Result<&mut Self> {
         match path {
             [] => {
                 if let Self::Branch { .. } = self {
                     Ok(self)
                 } else {
-                    Err(eyre::eyre!("Did not end up at a branch!"))
+                    bail!("Did not end up at a branch!")
                 }
             }
             [head, tail @ ..] => {
@@ -259,13 +199,96 @@ impl<L, B> BTreeNode<L, B> {
                     let child = if *head { first } else { second };
                     child.get_branch_at_mut(tail)
                 } else {
-                    Err(eyre::eyre!("Reached a leaf before end of path"))
+                    bail!("Reached a leaf before end of path")
                 }
             }
         }
     }
 
-    pub fn remove_leaf_at(&mut self, path: &mut &Vec<bool>) -> eyre::Result<()>
+    pub fn from_spec(spec: &BTreeSpec<L, B>) -> Result<Self>
+    where
+        L: Clone + Default,
+        B: Clone + Default,
+    {
+        let mut tree = Self::Leaf(L::default());
+        for path in &spec.leaf_paths {
+            Self::default_from_path(&mut tree, path)?;
+        }
+        if tree.collect_paths() != spec.leaf_paths {
+            bail!("Non-canonical/invalid path spec")
+        }
+
+        tree.assign_leaf_data(&spec.leaf_data)?;
+        tree.assign_branch_data(&spec.branch_data)?;
+
+        Ok(tree)
+    }
+
+    pub fn get_leaf_at(&self, path: &[bool]) -> Result<&Self> {
+        match (self, path) {
+            (Self::Leaf(_), []) => Ok(self),
+            (Self::Branch { first, second, .. }, [head, tail @ ..]) => {
+                let child = if *head { first } else { second };
+                child.get_leaf_at(tail)
+            }
+            _ => bail!("Could not find leaf at specified path"),
+        }
+    }
+
+    pub fn get_leaf_at_mut(&mut self, path: &[bool]) -> Result<&mut Self> {
+        match path {
+            [] => match self {
+                Self::Leaf(_) => Ok(self),
+                _ => bail!("Could not find leaf at specified path"),
+            },
+            [head, tail @ ..] => match self {
+                Self::Branch { first, second, .. } => {
+                    let child = if *head { first } else { second };
+                    child.get_leaf_at_mut(tail)
+                }
+                _ => bail!("Could not find leaf at specified path"),
+            },
+        }
+    }
+
+    pub fn collect_paths(&self) -> Vec<Vec<bool>> {
+        let mut all_paths = Vec::new();
+        self.collect_paths_impl(&mut Vec::new(), &mut all_paths);
+        all_paths
+    }
+
+    pub fn collect_leaf_data(&self) -> Vec<L>
+    where
+        L: Clone,
+    {
+        let mut leaf_data = Vec::new();
+        self.collect_leaf_data_impl(&mut leaf_data);
+        leaf_data
+    }
+
+    pub fn collect_branch_data(&self) -> Vec<B>
+    where
+        B: Clone,
+    {
+        let mut branch_data = Vec::new();
+        self.collect_branch_data_impl(&mut branch_data);
+        branch_data
+    }
+
+    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>, branch_data: B) -> Result<()>
+    where
+        L: Default + Clone,
+        B: Default + Clone,
+    {
+        let data = self.get_leaf_data_at(path)?.clone();
+        let leaf_mut = self.get_leaf_at_mut(path)?;
+        *leaf_mut = Self::default_branch();
+        leaf_mut.assign_leaf_data(&vec![data.clone(); 2])?;
+        leaf_mut.assign_branch_data(&vec![branch_data; 1])?;
+        Ok(())
+    }
+
+    pub fn remove_leaf_at(&mut self, path: &mut &Vec<bool>) -> Result<()>
     where
         L: Default + Clone,
         B: Default + Clone,
