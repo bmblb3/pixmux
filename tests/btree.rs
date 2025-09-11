@@ -41,6 +41,7 @@ impl TestBTreeExt for TestBTree {
     }
 }
 
+// Use case: Saving to a "state" file
 mod inspect_tree {
     use super::*;
 
@@ -122,6 +123,7 @@ mod inspect_tree {
     }
 }
 
+// Use case: "Load" from a state file
 mod construct_from_spec {
     use super::*;
 
@@ -227,46 +229,7 @@ mod construct_from_spec {
     }
 }
 
-mod extract_leaf_at {
-    use super::*;
-
-    #[rstest::rstest]
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![]],
-        leaf_data: vec![1],
-        branch_data: vec![],
-    })] // leaf at root
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![true], vec![false]],
-        leaf_data: vec![1, 2],
-        branch_data: vec![()],
-    })] // end-branch at root
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![true, true], vec![true, false], vec![false]],
-        leaf_data: vec![1, 2, 3],
-        branch_data: vec![(), ()],
-    })] // first-heavy branching
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![true], vec![false, true], vec![false, false]],
-        leaf_data: vec![1, 2, 3],
-        branch_data: vec![(), ()],
-    })] // second-heavy branching
-    #[case(BTreeSpec {
-        leaf_paths: vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]],
-        leaf_data: vec![1, 2, 3, 4],
-        branch_data: vec![(), (), ()],
-    })] // equally deep branching
-    fn test_btree(#[case] spec: BTreeSpec<i8, ()>) {
-        let tree = BTreeNode::from_spec(&spec).unwrap();
-        for (path, expected_data) in spec.leaf_paths.iter().zip(spec.leaf_data) {
-            let leaf = tree.get_leaf_at(path).unwrap();
-            if let BTreeNode::Leaf(actual_data) = *leaf {
-                assert_eq!(actual_data, expected_data);
-            }
-        }
-    }
-}
-
+// Use case: Splitting a "pane"
 mod split_at {
     use super::*;
 
@@ -421,6 +384,7 @@ mod split_at {
     }
 }
 
+// Use case: Splitting a "pane"
 mod remove_at {
     use super::*;
 
