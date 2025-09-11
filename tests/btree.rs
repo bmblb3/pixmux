@@ -42,7 +42,7 @@ impl TestBTreeExt for TestBTree {
 }
 
 // Use case: Saving to a "state" file
-mod inspect_tree {
+mod collect_spec {
     use super::*;
 
     #[rstest::rstest]
@@ -86,9 +86,11 @@ mod inspect_tree {
         #[case] expected_leaf_data: Vec<()>,
         #[case] expected_branch_data: Vec<()>,
     ) {
-        assert_eq!(tree.collect_paths(), expected_paths);
-        assert_eq!(tree.collect_leaf_data(), expected_leaf_data);
-        assert_eq!(tree.collect_branch_data(), expected_branch_data);
+        let spec = tree.get_spec();
+
+        assert_eq!(spec.leaf_paths, expected_paths);
+        assert_eq!(spec.leaf_data, expected_leaf_data);
+        assert_eq!(spec.branch_data, expected_branch_data);
     }
 
     // concrete (non-unit) types
@@ -96,13 +98,11 @@ mod inspect_tree {
     fn test_btree_with_data_on_leaf() {
         let tree = BTreeNode::<i32>::Leaf(42);
 
-        let paths = tree.collect_paths();
-        let leaf_data = tree.collect_leaf_data();
-        let branch_data = tree.collect_branch_data();
+        let spec = tree.get_spec();
 
-        assert_eq!(paths, [[]]);
-        assert_eq!(leaf_data, [42]);
-        assert_eq!(branch_data, []);
+        assert_eq!(spec.leaf_paths, [[]]);
+        assert_eq!(spec.leaf_data, [42]);
+        assert_eq!(spec.branch_data, []);
     }
 
     #[test]
@@ -113,13 +113,11 @@ mod inspect_tree {
             data: 42,
         };
 
-        let paths = tree.collect_paths();
-        let leaf_data = tree.collect_leaf_data();
-        let branch_data = tree.collect_branch_data();
+        let spec = tree.get_spec();
 
-        assert_eq!(paths, [[true], [false]]);
-        assert_eq!(leaf_data, [(), ()]);
-        assert_eq!(branch_data, [42]);
+        assert_eq!(spec.leaf_paths, [[true], [false]]);
+        assert_eq!(spec.leaf_data, [(), ()]);
+        assert_eq!(spec.branch_data, [42]);
     }
 }
 
@@ -135,9 +133,12 @@ mod construct_from_spec {
     #[case(TestBTree::spec_from(vec![vec![true, true], vec![true, false], vec![false, true], vec![false, false]]))] // equally deep branching
     fn test_btree(#[case] spec: BTreeSpec) {
         let tree = BTreeNode::<(), ()>::from_spec(&spec).unwrap();
-        assert_eq!(tree.collect_paths(), spec.leaf_paths);
-        assert_eq!(tree.collect_leaf_data(), spec.leaf_data);
-        assert_eq!(tree.collect_branch_data(), spec.branch_data);
+
+        let coll_spec = tree.get_spec();
+
+        assert_eq!(coll_spec.leaf_paths, spec.leaf_paths);
+        assert_eq!(coll_spec.leaf_data, spec.leaf_data);
+        assert_eq!(coll_spec.branch_data, spec.branch_data);
     }
 
     #[test]
@@ -153,9 +154,12 @@ mod construct_from_spec {
             branch_data: vec![5, 6, 7],
         };
         let tree = BTreeNode::from_spec(&spec).unwrap();
-        assert_eq!(tree.collect_paths(), spec.leaf_paths);
-        assert_eq!(tree.collect_leaf_data(), spec.leaf_data);
-        assert_eq!(tree.collect_branch_data(), spec.branch_data);
+
+        let coll_spec = tree.get_spec();
+
+        assert_eq!(coll_spec.leaf_paths, spec.leaf_paths);
+        assert_eq!(coll_spec.leaf_data, spec.leaf_data);
+        assert_eq!(coll_spec.branch_data, spec.branch_data);
     }
 
     #[rstest::rstest]
@@ -306,7 +310,10 @@ mod split_at {
         for (mut path, expected_paths) in spec.leaf_paths.iter().zip(split_paths) {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
             tree.split_leaf_at(&mut path, ()).unwrap();
-            assert_eq!(tree.collect_paths(), expected_paths);
+
+            let coll_spec = tree.get_spec();
+
+            assert_eq!(coll_spec.leaf_paths, expected_paths);
         }
     }
 
@@ -378,8 +385,11 @@ mod split_at {
         {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
             tree.split_leaf_at(&mut path, 5).unwrap();
-            assert_eq!(tree.collect_leaf_data(), expected_leaf_data);
-            assert_eq!(tree.collect_branch_data(), expected_branch_data);
+
+            let coll_spec = tree.get_spec();
+
+            assert_eq!(coll_spec.leaf_data, expected_leaf_data);
+            assert_eq!(coll_spec.branch_data, expected_branch_data);
         }
     }
 }
@@ -431,7 +441,10 @@ mod remove_at {
         for (mut path, expected_paths) in spec.leaf_paths.iter().zip(post_remove_paths) {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
             tree.remove_leaf_at(&mut path).unwrap();
-            assert_eq!(tree.collect_paths(), expected_paths);
+
+            let coll_spec = tree.get_spec();
+
+            assert_eq!(coll_spec.leaf_paths, expected_paths);
         }
     }
 
@@ -520,8 +533,11 @@ mod remove_at {
         {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
             tree.remove_leaf_at(&mut path).unwrap();
-            assert_eq!(tree.collect_leaf_data(), expected_leaf_data);
-            assert_eq!(tree.collect_branch_data(), expected_branch_data);
+
+            let coll_spec = tree.get_spec();
+
+            assert_eq!(coll_spec.leaf_data, expected_leaf_data);
+            assert_eq!(coll_spec.branch_data, expected_branch_data);
         }
     }
 }
