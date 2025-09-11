@@ -48,6 +48,19 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
+    pub fn remove_leaf_at(&mut self, path: &Vec<bool>) -> Result<()>
+    where
+        L: Default + Clone,
+        B: Default + Clone,
+    {
+        let parent_mut = match self.get_parent_of_mut(path) {
+            Err(_) => return Ok(()),
+            std::result::Result::Ok(p) => p,
+        };
+        let last = *path.last().unwrap();
+        parent_mut.replace_with_child(!last)
+    }
+
     pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>, branch_data: B) -> Result<()>
     where
         L: Default + Clone,
@@ -59,39 +72,6 @@ impl<L, B> BTreeNode<L, B> {
         leaf_mut.assign_leaf_data(&vec![data.clone(); 2])?;
         leaf_mut.assign_branch_data(&vec![branch_data; 1])?;
         Ok(())
-    }
-
-    pub fn remove_leaf_at(&mut self, path: &mut &Vec<bool>) -> Result<()>
-    where
-        L: Default + Clone,
-        B: Default + Clone,
-    {
-        match path.as_slice() {
-            [] => Ok(()),
-            [is_this_first] => {
-                if let Self::Branch { first, second, .. } = self {
-                    let promoted_child = if *is_this_first {
-                        second.clone()
-                    } else {
-                        first.clone()
-                    };
-                    *self = *promoted_child;
-                }
-                Ok(())
-            }
-            [head @ .., is_this_first] => {
-                let parent_mut = self.get_branch_at_mut(head)?;
-                if let Self::Branch { first, second, .. } = parent_mut {
-                    let promoted_child = if *is_this_first {
-                        second.clone()
-                    } else {
-                        first.clone()
-                    };
-                    *parent_mut = *promoted_child;
-                }
-                Ok(())
-            }
-        }
     }
 }
 
@@ -322,5 +302,28 @@ impl<L, B> BTreeNode<L, B> {
             }
             _ => bail!("Could not find leaf at specified path"),
         }
+    }
+
+    fn get_parent_of_mut(&mut self, path: &Vec<bool>) -> Result<&mut Self> {
+        match path.as_slice() {
+            [] => bail!("Root has no parent"),
+            [head @ .., _] => self.get_branch_at_mut(head),
+        }
+    }
+
+    fn replace_with_child(&mut self, replace_with_first_child: bool) -> Result<()>
+    where
+        L: Default + Clone,
+        B: Default + Clone,
+    {
+        if let Self::Branch { first, second, .. } = self {
+            let promoted_child = if replace_with_first_child {
+                first.clone()
+            } else {
+                second.clone()
+            };
+            *self = *promoted_child;
+        }
+        Ok(())
     }
 }
