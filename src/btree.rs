@@ -17,6 +17,97 @@ pub enum BTreeNode<L = (), B = ()> {
 }
 
 impl<L, B> BTreeNode<L, B> {
+    pub fn from_spec(spec: &BTreeSpec<L, B>) -> Result<Self>
+    where
+        L: Clone + Default,
+        B: Clone + Default,
+    {
+        let mut tree = Self::Leaf(L::default());
+        for path in &spec.leaf_paths {
+            Self::default_from_path(&mut tree, path)?;
+        }
+        if tree.collect_paths() != spec.leaf_paths {
+            bail!("Non-canonical/invalid path spec")
+        }
+
+        tree.assign_leaf_data(&spec.leaf_data)?;
+        tree.assign_branch_data(&spec.branch_data)?;
+
+        Ok(tree)
+    }
+
+    pub fn collect_paths(&self) -> Vec<Vec<bool>> {
+        let mut all_paths = Vec::new();
+        self.collect_paths_impl(&mut Vec::new(), &mut all_paths);
+        all_paths
+    }
+
+    pub fn collect_leaf_data(&self) -> Vec<L>
+    where
+        L: Clone,
+    {
+        let mut leaf_data = Vec::new();
+        self.collect_leaf_data_impl(&mut leaf_data);
+        leaf_data
+    }
+
+    pub fn collect_branch_data(&self) -> Vec<B>
+    where
+        B: Clone,
+    {
+        let mut branch_data = Vec::new();
+        self.collect_branch_data_impl(&mut branch_data);
+        branch_data
+    }
+
+    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>, branch_data: B) -> Result<()>
+    where
+        L: Default + Clone,
+        B: Default + Clone,
+    {
+        let data = self.get_leaf_data_at(path)?.clone();
+        let leaf_mut = self.get_leaf_at_mut(path)?;
+        *leaf_mut = Self::default_branch();
+        leaf_mut.assign_leaf_data(&vec![data.clone(); 2])?;
+        leaf_mut.assign_branch_data(&vec![branch_data; 1])?;
+        Ok(())
+    }
+
+    pub fn remove_leaf_at(&mut self, path: &mut &Vec<bool>) -> Result<()>
+    where
+        L: Default + Clone,
+        B: Default + Clone,
+    {
+        match path.as_slice() {
+            [] => Ok(()),
+            [is_this_first] => {
+                if let Self::Branch { first, second, .. } = self {
+                    let promoted_child = if *is_this_first {
+                        second.clone()
+                    } else {
+                        first.clone()
+                    };
+                    *self = *promoted_child;
+                }
+                Ok(())
+            }
+            [head @ .., is_this_first] => {
+                let parent_mut = self.get_branch_at_mut(head)?;
+                if let Self::Branch { first, second, .. } = parent_mut {
+                    let promoted_child = if *is_this_first {
+                        second.clone()
+                    } else {
+                        first.clone()
+                    };
+                    *parent_mut = *promoted_child;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+impl<L, B> BTreeNode<L, B> {
     fn default_leaf() -> Self
     where
         L: Default,
@@ -217,96 +308,6 @@ impl<L, B> BTreeNode<L, B> {
                 } else {
                     bail!("Reached a leaf before end of path")
                 }
-            }
-        }
-    }
-
-    // PUBLIC
-    pub fn from_spec(spec: &BTreeSpec<L, B>) -> Result<Self>
-    where
-        L: Clone + Default,
-        B: Clone + Default,
-    {
-        let mut tree = Self::Leaf(L::default());
-        for path in &spec.leaf_paths {
-            Self::default_from_path(&mut tree, path)?;
-        }
-        if tree.collect_paths() != spec.leaf_paths {
-            bail!("Non-canonical/invalid path spec")
-        }
-
-        tree.assign_leaf_data(&spec.leaf_data)?;
-        tree.assign_branch_data(&spec.branch_data)?;
-
-        Ok(tree)
-    }
-
-    pub fn collect_paths(&self) -> Vec<Vec<bool>> {
-        let mut all_paths = Vec::new();
-        self.collect_paths_impl(&mut Vec::new(), &mut all_paths);
-        all_paths
-    }
-
-    pub fn collect_leaf_data(&self) -> Vec<L>
-    where
-        L: Clone,
-    {
-        let mut leaf_data = Vec::new();
-        self.collect_leaf_data_impl(&mut leaf_data);
-        leaf_data
-    }
-
-    pub fn collect_branch_data(&self) -> Vec<B>
-    where
-        B: Clone,
-    {
-        let mut branch_data = Vec::new();
-        self.collect_branch_data_impl(&mut branch_data);
-        branch_data
-    }
-
-    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>, branch_data: B) -> Result<()>
-    where
-        L: Default + Clone,
-        B: Default + Clone,
-    {
-        let data = self.get_leaf_data_at(path)?.clone();
-        let leaf_mut = self.get_leaf_at_mut(path)?;
-        *leaf_mut = Self::default_branch();
-        leaf_mut.assign_leaf_data(&vec![data.clone(); 2])?;
-        leaf_mut.assign_branch_data(&vec![branch_data; 1])?;
-        Ok(())
-    }
-
-    pub fn remove_leaf_at(&mut self, path: &mut &Vec<bool>) -> Result<()>
-    where
-        L: Default + Clone,
-        B: Default + Clone,
-    {
-        match path.as_slice() {
-            [] => Ok(()),
-            [is_this_first] => {
-                if let Self::Branch { first, second, .. } = self {
-                    let promoted_child = if *is_this_first {
-                        second.clone()
-                    } else {
-                        first.clone()
-                    };
-                    *self = *promoted_child;
-                }
-                Ok(())
-            }
-            [head @ .., is_this_first] => {
-                let parent_mut = self.get_branch_at_mut(head)?;
-                if let Self::Branch { first, second, .. } = parent_mut {
-                    let promoted_child = if *is_this_first {
-                        second.clone()
-                    } else {
-                        first.clone()
-                    };
-                    *parent_mut = *promoted_child;
-                }
-                Ok(())
             }
         }
     }
