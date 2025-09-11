@@ -241,17 +241,6 @@ impl<L, B> BTreeNode<L, B> {
         Ok(tree)
     }
 
-    pub fn get_leaf_at(&self, path: &[bool]) -> Result<&Self> {
-        match (self, path) {
-            (Self::Leaf(_), []) => Ok(self),
-            (Self::Branch { first, second, .. }, [head, tail @ ..]) => {
-                let child = if *head { first } else { second };
-                child.get_leaf_at(tail)
-            }
-            _ => bail!("Could not find leaf at specified path"),
-        }
-    }
-
     pub fn collect_paths(&self) -> Vec<Vec<bool>> {
         let mut all_paths = Vec::new();
         self.collect_paths_impl(&mut Vec::new(), &mut all_paths);
