@@ -185,6 +185,22 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
+    fn get_leaf_at_mut(&mut self, path: &[bool]) -> Result<&mut Self> {
+        match path {
+            [] => match self {
+                Self::Leaf(_) => Ok(self),
+                _ => bail!("Could not find leaf at specified path"),
+            },
+            [head, tail @ ..] => match self {
+                Self::Branch { first, second, .. } => {
+                    let child = if *head { first } else { second };
+                    child.get_leaf_at_mut(tail)
+                }
+                _ => bail!("Could not find leaf at specified path"),
+            },
+        }
+    }
+
     fn get_branch_at_mut(&mut self, path: &[bool]) -> Result<&mut Self> {
         match path {
             [] => {
@@ -205,6 +221,7 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
+    // PUBLIC
     pub fn from_spec(spec: &BTreeSpec<L, B>) -> Result<Self>
     where
         L: Clone + Default,
@@ -232,22 +249,6 @@ impl<L, B> BTreeNode<L, B> {
                 child.get_leaf_at(tail)
             }
             _ => bail!("Could not find leaf at specified path"),
-        }
-    }
-
-    pub fn get_leaf_at_mut(&mut self, path: &[bool]) -> Result<&mut Self> {
-        match path {
-            [] => match self {
-                Self::Leaf(_) => Ok(self),
-                _ => bail!("Could not find leaf at specified path"),
-            },
-            [head, tail @ ..] => match self {
-                Self::Branch { first, second, .. } => {
-                    let child = if *head { first } else { second };
-                    child.get_leaf_at_mut(tail)
-                }
-                _ => bail!("Could not find leaf at specified path"),
-            },
         }
     }
 
