@@ -1,32 +1,48 @@
-use super::*;
+use pixmux::btree::{BTreeNode, BTreeSpec};
 
 // Helper type alias for testing with unit data
 type TestBTree = BTreeNode<(), ()>;
 
-mod inspect_tree {
-    use super::*;
+trait TestBTreeExt {
+    fn new_leaf() -> Self;
+    fn new_branch(first: BTreeNode<(), ()>, second: BTreeNode<(), ()>) -> Self;
+    fn new_lastbranch() -> Self;
+    fn spec_from(leaf_paths: Vec<Vec<bool>>) -> BTreeSpec;
+}
 
-    impl TestBTree {
-        fn new_leaf() -> Self {
-            BTreeNode::Leaf(())
-        }
+impl TestBTreeExt for TestBTree {
+    fn new_leaf() -> Self {
+        BTreeNode::Leaf(())
+    }
 
-        fn new_branch(first: BTreeNode<(), ()>, second: BTreeNode<(), ()>) -> Self {
-            BTreeNode::Branch {
-                first: Box::new(first),
-                second: Box::new(second),
-                data: (),
-            }
-        }
-
-        fn new_lastbranch() -> Self {
-            BTreeNode::Branch {
-                first: Box::new(Self::new_leaf()),
-                second: Box::new(Self::new_leaf()),
-                data: (),
-            }
+    fn new_branch(first: BTreeNode<(), ()>, second: BTreeNode<(), ()>) -> Self {
+        BTreeNode::Branch {
+            first: Box::new(first),
+            second: Box::new(second),
+            data: (),
         }
     }
+
+    fn new_lastbranch() -> Self {
+        BTreeNode::Branch {
+            first: Box::new(Self::new_leaf()),
+            second: Box::new(Self::new_leaf()),
+            data: (),
+        }
+    }
+
+    fn spec_from(leaf_paths: Vec<Vec<bool>>) -> BTreeSpec {
+        let size = leaf_paths.len();
+        BTreeSpec {
+            leaf_paths,
+            leaf_data: vec![(); size],
+            branch_data: vec![(); size - 1],
+        }
+    }
+}
+
+mod inspect_tree {
+    use super::*;
 
     #[rstest::rstest]
     #[case(TestBTree::new_leaf(),
@@ -108,17 +124,6 @@ mod inspect_tree {
 
 mod construct_from_spec {
     use super::*;
-
-    impl TestBTree {
-        pub fn spec_from(leaf_paths: Vec<Vec<bool>>) -> BTreeSpec {
-            let size = leaf_paths.len();
-            BTreeSpec {
-                leaf_paths,
-                leaf_data: vec![(); size],
-                branch_data: vec![(); size - 1],
-            }
-        }
-    }
 
     #[rstest::rstest]
     #[case(TestBTree::spec_from(vec![vec![]]))] // leaf at root
