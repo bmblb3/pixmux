@@ -36,6 +36,14 @@ impl<L, B> BTreeNode<L, B> {
         Ok(tree)
     }
 
+    pub fn get_next_path(&self, path: &[bool]) -> Vec<bool> {
+        self.get_adjacent_path(path, true)
+    }
+
+    pub fn get_prev_path(&self, path: &[bool]) -> Vec<bool> {
+        self.get_adjacent_path(path, false)
+    }
+
     pub fn get_spec(&self) -> BTreeSpec<L, B>
     where
         L: Clone,
@@ -255,6 +263,14 @@ impl<L, B> BTreeNode<L, B> {
         L: Default,
     {
         Self::Leaf(L::default())
+    }
+
+    fn get_adjacent_path(&self, path: &[bool], fwd: bool) -> Vec<bool> {
+        self.collect_paths()
+            .windows(2)
+            .find(|w| w[!fwd as usize] == path)
+            .map(|w| w[fwd as usize].clone())
+            .unwrap_or_else(|| path.to_vec())
     }
 
     fn get_branch_at_mut(&mut self, path: &[bool]) -> Result<&mut Self> {

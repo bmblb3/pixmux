@@ -438,9 +438,9 @@ mod remove_at {
         ]
     )] // second-heavy branching
     fn test_btree(#[case] spec: BTreeSpec<(), ()>, #[case] post_remove_paths: Vec<Vec<Vec<bool>>>) {
-        for (mut path, expected_paths) in spec.leaf_paths.iter().zip(post_remove_paths) {
+        for (path, expected_paths) in spec.leaf_paths.iter().zip(post_remove_paths) {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
-            tree.remove_leaf_at(&mut path).unwrap();
+            tree.remove_leaf_at(path).unwrap();
 
             let coll_spec = tree.get_spec();
 
@@ -525,19 +525,118 @@ mod remove_at {
         #[case] expected_post_remove_leaf_datas: Vec<Vec<i8>>,
         #[case] expected_post_remove_branch_datas: Vec<Vec<i8>>,
     ) {
-        for ((mut path, expected_leaf_data), expected_branch_data) in spec
+        for ((path, expected_leaf_data), expected_branch_data) in spec
             .leaf_paths
             .iter()
             .zip(expected_post_remove_leaf_datas)
             .zip(expected_post_remove_branch_datas)
         {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
-            tree.remove_leaf_at(&mut path).unwrap();
+            tree.remove_leaf_at(path).unwrap();
 
             let coll_spec = tree.get_spec();
 
             assert_eq!(coll_spec.leaf_data, expected_leaf_data);
             assert_eq!(coll_spec.branch_data, expected_branch_data);
+        }
+    }
+}
+
+// Use case: Next/Prev "pane" navigation
+mod iter_leaf {
+    use super::*;
+
+    #[rstest::rstest]
+    #[case(TestBTree::spec_from(vec![
+            vec![]
+        ]),
+        vec![
+            vec![]
+        ]
+    )] // leaf at root
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false],
+        ]),
+        vec![
+            vec![false],
+            vec![false],
+        ]
+    )] // branch at root
+    #[case(TestBTree::spec_from(vec![
+            vec![true, true],
+            vec![true, false],
+            vec![false],
+        ]),
+        vec![
+            vec![true, false],
+            vec![false],
+            vec![false],
+        ]
+    )] // first-heavy branching
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false, true],
+            vec![false, false],
+        ]),
+        vec![
+            vec![false, true],
+            vec![false, false],
+            vec![false, false],
+        ]
+    )] // second-heavy branching
+    fn test_next(#[case] spec: BTreeSpec<(), ()>, #[case] next_paths: Vec<Vec<bool>>) {
+        for (path, next_path) in spec.leaf_paths.iter().zip(next_paths) {
+            let tree = BTreeNode::from_spec(&spec).unwrap();
+
+            assert_eq!(tree.get_next_path(path), next_path);
+        }
+    }
+
+    #[rstest::rstest]
+    #[case(TestBTree::spec_from(vec![
+            vec![]
+        ]),
+        vec![
+            vec![]
+        ]
+    )] // leaf at root
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false],
+        ]),
+        vec![
+            vec![true],
+            vec![true],
+        ]
+    )] // branch at root
+    #[case(TestBTree::spec_from(vec![
+            vec![true, true],
+            vec![true, false],
+            vec![false],
+        ]),
+        vec![
+            vec![true, true],
+            vec![true, true],
+            vec![true, false],
+        ]
+    )] // first-heavy branching
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false, true],
+            vec![false, false],
+        ]),
+        vec![
+            vec![true],
+            vec![true],
+            vec![false, true],
+        ]
+    )] // second-heavy branching
+    fn test_prev(#[case] spec: BTreeSpec<(), ()>, #[case] next_paths: Vec<Vec<bool>>) {
+        for (path, next_path) in spec.leaf_paths.iter().zip(next_paths) {
+            let tree = BTreeNode::from_spec(&spec).unwrap();
+
+            assert_eq!(tree.get_prev_path(path), next_path);
         }
     }
 }
