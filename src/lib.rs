@@ -2,6 +2,7 @@
 pub mod adjust_index;
 pub mod btree;
 pub mod imagefile;
+pub mod panes;
 pub mod panes_old;
 pub mod parse_csv;
 pub mod tab;
