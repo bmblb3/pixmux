@@ -121,6 +121,22 @@ mod collect_spec {
     }
 }
 
+// Use case: Creating "first" pane
+mod default {
+    use super::*;
+
+    #[test]
+    fn test_default() {
+        let tree = TestBTree::default();
+
+        let spec = tree.get_spec();
+
+        assert_eq!(spec.leaf_paths, [[]]);
+        assert_eq!(spec.leaf_data, [()]);
+        assert_eq!(spec.branch_data, []);
+    }
+}
+
 // Use case: "Load" from a state file
 mod construct_from_spec {
     use super::*;
@@ -307,9 +323,9 @@ mod split_at {
         ]
     )] // second-heavy branching
     fn test_btree(#[case] spec: BTreeSpec<(), ()>, #[case] split_paths: Vec<Vec<Vec<bool>>>) {
-        for (mut path, expected_paths) in spec.leaf_paths.iter().zip(split_paths) {
+        for (path, expected_paths) in spec.leaf_paths.iter().zip(split_paths) {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
-            tree.split_leaf_at(&mut path, ()).unwrap();
+            tree.split_leaf_at(path, ()).unwrap();
 
             let coll_spec = tree.get_spec();
 
@@ -377,14 +393,14 @@ mod split_at {
         #[case] expected_post_split_leaf_datas: Vec<Vec<i8>>,
         #[case] expected_post_split_branch_datas: Vec<Vec<i8>>,
     ) {
-        for ((mut path, expected_leaf_data), expected_branch_data) in spec
+        for ((path, expected_leaf_data), expected_branch_data) in spec
             .leaf_paths
             .iter()
             .zip(expected_post_split_leaf_datas)
             .zip(expected_post_split_branch_datas)
         {
             let mut tree = BTreeNode::from_spec(&spec).unwrap();
-            tree.split_leaf_at(&mut path, 5).unwrap();
+            tree.split_leaf_at(path, 5).unwrap();
 
             let coll_spec = tree.get_spec();
 

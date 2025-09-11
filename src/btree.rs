@@ -16,6 +16,15 @@ pub enum BTreeNode<L = (), B = ()> {
     },
 }
 
+impl<L, B> Default for BTreeNode<L, B>
+where
+    L: Default,
+{
+    fn default() -> Self {
+        Self::default_leaf()
+    }
+}
+
 impl<L, B> BTreeNode<L, B> {
     pub fn from_spec(spec: &BTreeSpec<L, B>) -> Result<Self>
     where
@@ -69,7 +78,7 @@ impl<L, B> BTreeNode<L, B> {
         parent_mut.replace_with_child(!last)
     }
 
-    pub fn split_leaf_at(&mut self, path: &mut &Vec<bool>, branch_data: B) -> Result<()>
+    pub fn split_leaf_at(&mut self, path: &[bool], branch_data: B) -> Result<()>
     where
         L: Default + Clone,
         B: Default + Clone,

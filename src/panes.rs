@@ -1,15 +1,17 @@
 use crate::btree::{BTreeNode, BTreeSpec};
 
-pub struct Pane(BTreeNode<(), ()>);
-
-impl Default for Pane {
-    fn default() -> Self {
-        Self(BTreeNode::Leaf(()))
-    }
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PaneData {
+    pub imagefile: String,
 }
 
+type PaneSpec = BTreeSpec<PaneData, ()>;
+
+#[derive(Default)]
+pub struct Pane(BTreeNode<PaneData, ()>);
+
 impl Pane {
-    pub fn get_spec(&self) -> BTreeSpec {
+    pub fn get_spec(&self) -> PaneSpec {
         self.0.get_spec()
     }
 }
