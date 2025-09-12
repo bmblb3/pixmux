@@ -2,10 +2,16 @@ use color_eyre::Result;
 
 use crate::btree::{BTreeNode, BTreeSpec};
 
+pub type PaneType = BTreeNode<PaneData, SplitData>;
+
 #[derive(Default)]
-pub struct Pane(BTreeNode<PaneData, SplitData>);
+pub struct Pane(pub PaneType);
 
 impl Pane {
+    pub fn inner(&self) -> &BTreeNode<PaneData, SplitData> {
+        &self.0
+    }
+
     pub fn get_spec(&self) -> PaneSpec {
         self.0.get_spec()
     }
@@ -16,6 +22,10 @@ impl Pane {
 
     pub fn hsplit(&mut self, path: &[bool]) -> Result<()> {
         self.0.split_leaf_at(path, SplitData::default_hsplit())
+    }
+
+    pub fn remove(&mut self, path: &[bool]) -> Result<()> {
+        self.0.remove_leaf_at(path)
     }
 }
 

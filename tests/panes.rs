@@ -1,3 +1,4 @@
+use pixmux::btree::BTreeNode;
 use pixmux::panes::{Pane, PaneData, SplitData, SplitDirection};
 
 #[test]
@@ -6,6 +7,7 @@ fn test_init() {
 
     let coll_spec = pane.get_spec();
 
+    assert!(matches!(pane.inner(), BTreeNode::Leaf(PaneData { .. })));
     assert_eq!(coll_spec.leaf_paths, vec![vec![]]);
     assert!(matches!(coll_spec.leaf_data.len(), 1));
     assert!(matches!(
@@ -67,4 +69,13 @@ fn test_splits() {
             ..
         }
     ));
+}
+
+#[test]
+fn test_remove() {
+    let mut pane = Pane::default();
+
+    pane.remove(&[]).unwrap();
+    let coll_spec = pane.get_spec();
+    assert_eq!(coll_spec.leaf_paths, vec![vec![]]);
 }
