@@ -6,6 +6,7 @@ use pixmux::tab::Tab;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::{DefaultTerminal, Frame};
 
+use crate::app::events::Mode;
 use crate::ui;
 
 mod events;
@@ -20,6 +21,7 @@ pub struct App {
     pub current_datarow_index: usize,
     pub pane_tree: Pane,
     pub current_pane_path: Option<Vec<bool>>,
+    pub mode: events::Mode,
 }
 
 impl App {
@@ -34,6 +36,7 @@ impl App {
             current_datarow_index: 0,
             pane_tree: Pane::default(),
             current_pane_path: None,
+            mode: Mode::Navigation,
         })
     }
 

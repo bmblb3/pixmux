@@ -1,12 +1,14 @@
 use std::slice::Iter;
 
+use image::ImageReader;
 use pixmux::btree::BTreeNode;
 use pixmux::panes::{PaneData, PaneType, SplitData, SplitDirection};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::Color;
 use ratatui::widgets::Block;
 use ratatui::{Frame, layout};
-use ratatui_image::{StatefulImage, picker};
+use ratatui_image::StatefulImage;
+use ratatui_image::picker::Picker;
 
 use crate::app::App;
 
@@ -19,7 +21,7 @@ impl ImageTabUI {
         frame: &mut Frame,
         area: Rect,
         app: &App,
-        picker: &picker::Picker,
+        picker: &Picker,
     ) {
         match pane {
             BTreeNode::Leaf(PaneData { imagefile }) => {
@@ -39,17 +41,10 @@ impl ImageTabUI {
                 let imagefile = imagedir.join(imagefile);
 
                 if imagefile.is_file() {
-                    let image_source = image::ImageReader::open(imagefile)
-                        .unwrap()
-                        .decode()
-                        .unwrap();
+                    let image_source = ImageReader::open(imagefile).unwrap().decode().unwrap();
                     let mut image = picker.new_resize_protocol(image_source);
 
-                    frame.render_stateful_widget(
-                        StatefulImage::default(),
-                        block.inner(area),
-                        &mut image,
-                    );
+                    frame.render_stateful_widget(StatefulImage::default(), area, &mut image);
                 }
             }
             BTreeNode::Branch {
@@ -63,7 +58,6 @@ impl ImageTabUI {
                     Constraint::Percentage((100 - pct) as u16),
                 ];
                 let chunks = Layout::default()
-                    .spacing(-1)
                     .direction(match *direction {
                         SplitDirection::Vertical => layout::Direction::Horizontal,
                         SplitDirection::Horizontal => layout::Direction::Vertical,
@@ -77,7 +71,7 @@ impl ImageTabUI {
     }
 
     pub fn render(frame: &mut Frame, area: Rect, app: &App) {
-        let picker = picker::Picker::from_query_stdio().unwrap();
+        let picker = Picker::from_query_stdio().unwrap();
         Self::render_pane(
             app.pane_tree.inner(),
             &mut app.pane_tree.get_spec().leaf_paths.iter(),
