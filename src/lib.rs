@@ -1,5 +1,6 @@
 #![warn(clippy::used_underscore_binding)]
 pub mod adjust_index;
+pub mod boolpaths;
 pub mod btree;
 pub mod imagefile;
 pub mod panes;
