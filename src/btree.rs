@@ -1,4 +1,5 @@
-use color_eyre::eyre::{Ok, Result, bail};
+use color_eyre::eyre::{Ok, Result, bail, eyre};
+use itertools::Itertools;
 
 pub struct BTreeSpec<L = (), B = ()> {
     pub leaf_paths: Vec<Vec<bool>>,
@@ -54,6 +55,33 @@ impl<L, B> BTreeNode<L, B> {
             leaf_paths: self.collect_paths(),
             leaf_data: self.collect_leaf_data(),
             branch_data: self.collect_branch_data(),
+        }
+    }
+
+    pub fn next_path(&self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+        let paths = self.collect_paths();
+        match path {
+            Some(path) => paths
+                .iter()
+                .circular_tuple_windows::<(&Vec<bool>, &Vec<bool>)>()
+                .find(|x| x.0 == path)
+                .map(|x| x.1.clone())
+                .ok_or(eyre!("")),
+            None => paths.first().cloned().ok_or(eyre!("")),
+        }
+    }
+
+    pub fn prev_path(&self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+        let paths = self.collect_paths();
+        match path {
+            Some(path) => paths
+                .iter()
+                .rev()
+                .circular_tuple_windows::<(&Vec<bool>, &Vec<bool>)>()
+                .find(|x| x.0 == path)
+                .map(|x| x.1.clone())
+                .ok_or(eyre!("")),
+            None => paths.last().cloned().ok_or(eyre!("")),
         }
     }
 

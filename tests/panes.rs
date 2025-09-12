@@ -58,14 +58,14 @@ fn test_splits() {
     assert!(matches!(
         coll_spec.branch_data.first().unwrap(),
         SplitData {
-            direction: SplitDirection::Horizontal,
+            direction: SplitDirection::Vertical,
             ..
         }
     ));
     assert!(matches!(
         coll_spec.branch_data.get(1).unwrap(),
         SplitData {
-            direction: SplitDirection::Vertical,
+            direction: SplitDirection::Horizontal,
             ..
         }
     ));
@@ -78,4 +78,17 @@ fn test_remove() {
     pane.remove(&[]).unwrap();
     let coll_spec = pane.get_spec();
     assert_eq!(coll_spec.leaf_paths, vec![vec![]]);
+}
+
+#[test]
+fn test_navigate() {
+    let mut pane = Pane::default();
+    pane.vsplit(&[]).unwrap();
+
+    assert_eq!(pane.next(&None).unwrap(), vec![true]);
+    assert_eq!(pane.next(&Some(vec![true])).unwrap(), vec![false]);
+    assert_eq!(pane.next(&Some(vec![false])).unwrap(), vec![true]);
+    assert_eq!(pane.prev(&None).unwrap(), vec![false]);
+    assert_eq!(pane.prev(&Some(vec![false])).unwrap(), vec![true]);
+    assert_eq!(pane.prev(&Some(vec![true])).unwrap(), vec![false]);
 }

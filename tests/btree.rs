@@ -557,3 +557,49 @@ mod remove_at {
         }
     }
 }
+
+// Use case: Navigating a "pane"
+mod navigate {
+    use super::*;
+
+    #[rstest::rstest]
+    #[case(TestBTree::spec_from(vec![
+            vec![]
+        ]))] // leaf at root
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false]
+        ]))] // branch at root
+    #[case(TestBTree::spec_from(vec![
+            vec![true, true],
+            vec![true, false],
+            vec![false]
+        ]))] // first-heavy branching
+    #[case(TestBTree::spec_from(vec![
+            vec![true],
+            vec![false, true],
+            vec![false, false],
+        ]))] // second-heavy branching
+    fn test_btree(#[case] spec: BTreeSpec<(), ()>) {
+        let tree = BTreeNode::from_spec(&spec).unwrap();
+
+        let mut start_path_for_next = None;
+        let mut expected_next_paths = spec.leaf_paths.clone();
+        expected_next_paths.push(spec.leaf_paths.first().unwrap().clone());
+        for expected_next_path in expected_next_paths {
+            let actual_next_path = tree.next_path(&start_path_for_next).unwrap();
+            assert_eq!(actual_next_path, expected_next_path);
+            start_path_for_next = Some(expected_next_path);
+        }
+
+        let mut start_path_for_prev = None;
+        let mut expected_prev_paths = spec.leaf_paths.clone();
+        expected_prev_paths.reverse();
+        expected_prev_paths.push(spec.leaf_paths.last().unwrap().clone());
+        for expected_prev_path in expected_prev_paths {
+            let actual_prev_path = tree.prev_path(&start_path_for_prev).unwrap();
+            assert_eq!(actual_prev_path, expected_prev_path);
+            start_path_for_prev = Some(expected_prev_path);
+        }
+    }
+}

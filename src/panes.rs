@@ -27,6 +27,14 @@ impl Pane {
     pub fn remove(&mut self, path: &[bool]) -> Result<()> {
         self.0.remove_leaf_at(path)
     }
+
+    pub fn next(&mut self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+        self.0.next_path(path)
+    }
+
+    pub fn prev(&mut self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+        self.0.prev_path(path)
+    }
 }
 
 #[derive(Clone, Default)]
@@ -55,14 +63,14 @@ impl Default for SplitData {
 impl SplitData {
     fn default_vsplit() -> Self {
         Self {
-            direction: SplitDirection::Horizontal,
+            direction: SplitDirection::Vertical,
             pct: 50,
         }
     }
 
     fn default_hsplit() -> Self {
         Self {
-            direction: SplitDirection::Vertical,
+            direction: SplitDirection::Horizontal,
             pct: 50,
         }
     }
