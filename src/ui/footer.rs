@@ -41,6 +41,17 @@ impl Footer {
                 ],
                 Color::Cyan,
             ),
+            (Mode::Image, _) => (
+                "LAY",
+                Color::Green,
+                vec![
+                    "<Esc>: IMG mode",
+                    "n: Next image",
+                    ": Pan image",
+                    "󱓉: Zoom",
+                ],
+                Color::LightGreen,
+            ),
         };
 
         let mode_bar = Paragraph::new(Line::from(

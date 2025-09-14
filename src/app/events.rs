@@ -9,6 +9,7 @@ pub enum Mode {
     #[default]
     Navigation,
     Layout,
+    Image,
 }
 
 impl App {
@@ -35,8 +36,10 @@ impl App {
                         AdjustDirection::Next,
                     )
                 }
+
                 _ => {}
             },
+
             (Mode::Navigation, Tab::Image) => match (key.modifiers, key.code) {
                 (KeyModifiers::NONE, KeyCode::Char('q') | KeyCode::Char('Q')) => self.quit(),
 
@@ -46,16 +49,32 @@ impl App {
 
                 (KeyModifiers::NONE, KeyCode::Left) => {
                     self.current_pane_path = self.pane_tree.prev(&self.current_pane_path).unwrap();
+                    // TODO: HPrev
+                }
+                (KeyModifiers::NONE, KeyCode::Up) => {
+                    self.current_pane_path = self.pane_tree.prev(&self.current_pane_path).unwrap();
+                    // TODO: VPrev
                 }
                 (KeyModifiers::NONE, KeyCode::Right) => {
                     self.current_pane_path = self.pane_tree.next(&self.current_pane_path).unwrap();
+                    // TODO: HNext
+                }
+                (KeyModifiers::NONE, KeyCode::Down) => {
+                    self.current_pane_path = self.pane_tree.prev(&self.current_pane_path).unwrap();
+                    // TODO: VNext
                 }
 
                 (KeyModifiers::NONE, KeyCode::Char('l') | KeyCode::Char('L')) => {
                     self.mode = Mode::Layout;
                 }
+
+                (KeyModifiers::NONE, KeyCode::Char('i') | KeyCode::Char('I')) => {
+                    self.mode = Mode::Image;
+                }
+
                 _ => {}
             },
+
             (Mode::Layout, Tab::Image) => match (key.modifiers, key.code) {
                 (KeyModifiers::NONE, KeyCode::Esc) => self.mode = Mode::Navigation,
 
@@ -77,8 +96,53 @@ impl App {
                     self.pane_tree.remove(&self.current_pane_path).unwrap();
                     self.current_pane_path = new_path;
                 }
+
+                (KeyModifiers::NONE, KeyCode::Left) => {
+                    // TODO: Resize pane
+                }
+                (KeyModifiers::NONE, KeyCode::Up) => {
+                    // TODO: Resize pane
+                }
+                (KeyModifiers::NONE, KeyCode::Right) => {
+                    // TODO: Resize pane
+                }
+                (KeyModifiers::NONE, KeyCode::Down) => {
+                    // TODO: Resize pane
+                }
+
                 _ => {}
             },
+
+            (Mode::Image, Tab::Image) => match (key.modifiers, key.code) {
+                (KeyModifiers::NONE, KeyCode::Esc) => self.mode = Mode::Navigation,
+
+                (KeyModifiers::NONE, KeyCode::Char('n') | KeyCode::Char('N')) => {
+                    // TODO: Next image
+                }
+
+                (KeyModifiers::NONE, KeyCode::Left) => {
+                    // TODO: Pane image
+                }
+                (KeyModifiers::NONE, KeyCode::Up) => {
+                    // TODO: Pane image
+                }
+                (KeyModifiers::NONE, KeyCode::Right) => {
+                    // TODO: Pane image
+                }
+                (KeyModifiers::NONE, KeyCode::Down) => {
+                    // TODO: Pane image
+                }
+
+                (KeyModifiers::NONE, KeyCode::Char('+')) => {
+                    // TODO: Zoom
+                }
+                (KeyModifiers::NONE, KeyCode::Char('-')) => {
+                    // TODO: Zoom
+                }
+
+                _ => {}
+            },
+
             _ => {}
         }
     }
