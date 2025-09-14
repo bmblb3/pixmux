@@ -15,13 +15,13 @@ pub mod events;
 pub struct App {
     running: bool,
     pub col_headers: Vec<String>,
-    pub table_rows: Vec<Vec<String>>,
-    pub imagedir_paths: Vec<std::path::PathBuf>,
-    pub current_tab: Tab,
     pub current_datarow_index: usize,
-    pub pane_tree: Pane,
     pub current_pane_path: Vec<bool>,
+    pub current_tab: Tab,
+    pub imagedir_paths: Vec<std::path::PathBuf>,
     pub mode: events::Mode,
+    pub pane_tree: Pane,
+    pub table_rows: Vec<Vec<String>>,
 }
 
 impl App {
@@ -30,23 +30,14 @@ impl App {
         Ok(Self {
             running: false,
             col_headers,
-            table_rows,
-            imagedir_paths,
-            current_tab: Tab::default(),
             current_datarow_index: 0,
-            pane_tree: Pane::default(),
             current_pane_path: vec![],
+            current_tab: Tab::default(),
+            imagedir_paths,
             mode: Mode::Navigation,
+            pane_tree: Pane::default(),
+            table_rows,
         })
-    }
-
-    pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
-        self.running = true;
-        while self.running {
-            terminal.draw(|frame| self.render(frame))?;
-            self.handle_crossterm_events()?;
-        }
-        Ok(())
     }
 
     fn quit(&mut self) {
@@ -75,5 +66,14 @@ impl App {
         }
 
         ui::Footer::render(frame, chunks[2], self);
+    }
+
+    pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
+        self.running = true;
+        while self.running {
+            terminal.draw(|frame| self.render(frame))?;
+            self.handle_crossterm_events()?;
+        }
+        Ok(())
     }
 }
