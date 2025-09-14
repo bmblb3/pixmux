@@ -9,7 +9,7 @@ use ratatui::{DefaultTerminal, Frame};
 use crate::app::events::Mode;
 use crate::ui;
 
-mod events;
+pub mod events;
 
 #[derive(Default)]
 pub struct App {
@@ -73,5 +73,7 @@ impl App {
                 ui::ImageTabUI::render(frame, chunks[1], self);
             }
         }
+
+        ui::Footer::render(frame, chunks[2], self);
     }
 }

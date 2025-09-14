@@ -14,7 +14,7 @@ impl Tab {
     }
 
     pub fn titles() -> Vec<&'static str> {
-        vec!["Data", "Image"]
+        vec!["DATA", "IMAGE"]
     }
 
     pub fn to_index(&self) -> usize {

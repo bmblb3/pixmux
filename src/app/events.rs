@@ -8,20 +8,19 @@ use super::App;
 pub enum Mode {
     #[default]
     Navigation,
-    PaneEditing,
+    Layout,
 }
 
 impl App {
     pub fn on_key_event(&mut self, key: KeyEvent) {
-        match self.mode {
-            Mode::Navigation => match (key.modifiers, key.code) {
+        match (self.mode, &self.current_tab) {
+            (Mode::Navigation, Tab::Data) => match (key.modifiers, key.code) {
                 (KeyModifiers::NONE, KeyCode::Char('q') | KeyCode::Char('Q')) => self.quit(),
 
                 (KeyModifiers::NONE, KeyCode::Tab) => {
                     self.current_tab = self.current_tab.cycle();
                 }
 
-                //
                 (KeyModifiers::NONE, KeyCode::Up) => {
                     self.current_datarow_index = step_index(
                         self.current_datarow_index,
@@ -36,40 +35,41 @@ impl App {
                         AdjustDirection::Next,
                     )
                 }
+                _ => {}
+            },
+            (Mode::Navigation, Tab::Image) => match (key.modifiers, key.code) {
+                (KeyModifiers::NONE, KeyCode::Char('q') | KeyCode::Char('Q')) => self.quit(),
 
-                //
-                (KeyModifiers::NONE, KeyCode::Right) => {
-                    if let Tab::Image = self.current_tab {
-                        self.current_pane_path =
-                            self.pane_tree.next(&self.current_pane_path).unwrap();
-                    }
+                (KeyModifiers::NONE, KeyCode::Tab) => {
+                    self.current_tab = self.current_tab.cycle();
                 }
+
                 (KeyModifiers::NONE, KeyCode::Left) => {
-                    if let Tab::Image = self.current_tab {
-                        self.current_pane_path =
-                            self.pane_tree.prev(&self.current_pane_path).unwrap();
-                    }
+                    self.current_pane_path = self.pane_tree.prev(&self.current_pane_path).unwrap();
+                }
+                (KeyModifiers::NONE, KeyCode::Right) => {
+                    self.current_pane_path = self.pane_tree.next(&self.current_pane_path).unwrap();
                 }
 
-                //
-                (KeyModifiers::NONE, KeyCode::Char('e')) => {
-                    if let Tab::Image = self.current_tab {
-                        self.mode = Mode::PaneEditing;
-                    }
+                (KeyModifiers::NONE, KeyCode::Char('l') | KeyCode::Char('L')) => {
+                    self.mode = Mode::Layout;
                 }
                 _ => {}
             },
-            Mode::PaneEditing => match (key.modifiers, key.code) {
+            (Mode::Layout, Tab::Image) => match (key.modifiers, key.code) {
                 (KeyModifiers::NONE, KeyCode::Esc) => self.mode = Mode::Navigation,
-                (KeyModifiers::NONE, KeyCode::Char('v')) => {
+
+                (KeyModifiers::NONE, KeyCode::Char('v') | KeyCode::Char('V')) => {
                     self.pane_tree.vsplit(&self.current_pane_path).unwrap();
                     self.current_pane_path.push(false);
                 }
-                (KeyModifiers::NONE, KeyCode::Char('s')) => {
+
+                (KeyModifiers::NONE, KeyCode::Char('h') | KeyCode::Char('H')) => {
                     self.pane_tree.hsplit(&self.current_pane_path).unwrap();
                     self.current_pane_path.push(false);
                 }
-                (KeyModifiers::NONE, KeyCode::Char('x')) => {
+
+                (KeyModifiers::NONE, KeyCode::Char('x') | KeyCode::Char('X')) => {
                     let new_path = BoolPathOperations::get_nearest_promoted_leaf(
                         &self.pane_tree.get_spec().leaf_paths,
                         &self.current_pane_path,
@@ -79,6 +79,7 @@ impl App {
                 }
                 _ => {}
             },
+            _ => {}
         }
     }
 
