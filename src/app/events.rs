@@ -41,21 +41,19 @@ impl App {
                 (KeyModifiers::NONE, KeyCode::Right) => {
                     if let Tab::Image = self.current_tab {
                         self.current_pane_path =
-                            Some(self.pane_tree.next(&self.current_pane_path).unwrap());
+                            self.pane_tree.next(&self.current_pane_path).unwrap();
                     }
                 }
                 (KeyModifiers::NONE, KeyCode::Left) => {
                     if let Tab::Image = self.current_tab {
                         self.current_pane_path =
-                            Some(self.pane_tree.prev(&self.current_pane_path).unwrap());
+                            self.pane_tree.prev(&self.current_pane_path).unwrap();
                     }
                 }
 
                 //
                 (KeyModifiers::NONE, KeyCode::Char('e')) => {
-                    if let Tab::Image = self.current_tab
-                        && self.current_pane_path.is_some()
-                    {
+                    if let Tab::Image = self.current_tab {
                         self.mode = Mode::PaneEditing;
                     }
                 }
@@ -64,41 +62,20 @@ impl App {
             Mode::PaneEditing => match (key.modifiers, key.code) {
                 (KeyModifiers::NONE, KeyCode::Esc) => self.mode = Mode::Navigation,
                 (KeyModifiers::NONE, KeyCode::Char('v')) => {
-                    if self.current_pane_path.is_none() {
-                        return;
-                    }
-                    self.pane_tree
-                        .vsplit(self.current_pane_path.as_ref().unwrap())
-                        .unwrap();
-                    if let Some(ref mut path) = self.current_pane_path {
-                        path.push(false);
-                    }
+                    self.pane_tree.vsplit(&self.current_pane_path).unwrap();
+                    self.current_pane_path.push(false);
                 }
                 (KeyModifiers::NONE, KeyCode::Char('s')) => {
-                    if self.current_pane_path.is_none() {
-                        return;
-                    }
-                    self.pane_tree
-                        .hsplit(self.current_pane_path.as_ref().unwrap())
-                        .unwrap();
-                    if let Some(ref mut path) = self.current_pane_path {
-                        path.push(false);
-                    }
+                    self.pane_tree.hsplit(&self.current_pane_path).unwrap();
+                    self.current_pane_path.push(false);
                 }
                 (KeyModifiers::NONE, KeyCode::Char('x')) => {
-                    if self.current_pane_path.is_none() {
-                        return;
-                    }
                     let new_path = BoolPathOperations::get_nearest_promoted_leaf(
                         &self.pane_tree.get_spec().leaf_paths,
-                        self.current_pane_path.as_ref().unwrap(),
+                        &self.current_pane_path,
                     );
-
-                    self.pane_tree
-                        .remove(self.current_pane_path.as_ref().unwrap())
-                        .unwrap();
-
-                    self.current_pane_path = Some(new_path);
+                    self.pane_tree.remove(&self.current_pane_path).unwrap();
+                    self.current_pane_path = new_path;
                 }
                 _ => {}
             },

@@ -85,10 +85,8 @@ fn test_navigate() {
     let mut pane = Pane::default();
     pane.vsplit(&[]).unwrap();
 
-    assert_eq!(pane.next(&None).unwrap(), vec![true]);
-    assert_eq!(pane.next(&Some(vec![true])).unwrap(), vec![false]);
-    assert_eq!(pane.next(&Some(vec![false])).unwrap(), vec![true]);
-    assert_eq!(pane.prev(&None).unwrap(), vec![false]);
-    assert_eq!(pane.prev(&Some(vec![false])).unwrap(), vec![true]);
-    assert_eq!(pane.prev(&Some(vec![true])).unwrap(), vec![false]);
+    assert_eq!(pane.next(&vec![true]).unwrap(), vec![false]);
+    assert_eq!(pane.next(&vec![false]).unwrap(), vec![true]);
+    assert_eq!(pane.prev(&vec![false]).unwrap(), vec![true]);
+    assert_eq!(pane.prev(&vec![true]).unwrap(), vec![false]);
 }

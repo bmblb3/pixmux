@@ -20,7 +20,7 @@ pub struct App {
     pub current_tab: Tab,
     pub current_datarow_index: usize,
     pub pane_tree: Pane,
-    pub current_pane_path: Option<Vec<bool>>,
+    pub current_pane_path: Vec<bool>,
     pub mode: events::Mode,
 }
 
@@ -35,7 +35,7 @@ impl App {
             current_tab: Tab::default(),
             current_datarow_index: 0,
             pane_tree: Pane::default(),
-            current_pane_path: None,
+            current_pane_path: vec![],
             mode: Mode::Navigation,
         })
     }

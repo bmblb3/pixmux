@@ -27,11 +27,7 @@ impl ImageTabUI {
             BTreeNode::Leaf(PaneData { imagefile }) => {
                 let block = Block::bordered();
 
-                if app.current_pane_path.is_some()
-                    && paths
-                        .next()
-                        .is_some_and(|x| *x == *app.current_pane_path.as_ref().unwrap())
-                {
+                if paths.next().is_some_and(|x| *x == *app.current_pane_path) {
                     frame.render_widget(block.clone().style(Color::LightYellow), area);
                 } else {
                     frame.render_widget(block.clone(), area);

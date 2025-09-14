@@ -28,11 +28,11 @@ impl Pane {
         self.0.remove_leaf_at(path)
     }
 
-    pub fn next(&mut self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+    pub fn next(&mut self, path: &Vec<bool>) -> Result<Vec<bool>> {
         self.0.next_path(path)
     }
 
-    pub fn prev(&mut self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+    pub fn prev(&mut self, path: &Vec<bool>) -> Result<Vec<bool>> {
         self.0.prev_path(path)
     }
 }

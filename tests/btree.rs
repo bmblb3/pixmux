@@ -583,23 +583,25 @@ mod navigate {
     fn test_btree(#[case] spec: BTreeSpec<(), ()>) {
         let tree = BTreeNode::from_spec(&spec).unwrap();
 
-        let mut start_path_for_next = None;
-        let mut expected_next_paths = spec.leaf_paths.clone();
-        expected_next_paths.push(spec.leaf_paths.first().unwrap().clone());
-        for expected_next_path in expected_next_paths {
-            let actual_next_path = tree.next_path(&start_path_for_next).unwrap();
-            assert_eq!(actual_next_path, expected_next_path);
-            start_path_for_next = Some(expected_next_path);
+        let mut cases = spec.leaf_paths.clone();
+        cases.push(spec.leaf_paths.first().unwrap().clone());
+        let cases = cases.windows(2);
+        for case in cases {
+            let this_path = &case[0];
+            let expected = &case[1];
+            let actual = tree.next_path(this_path).unwrap();
+            assert_eq!(actual, *expected);
         }
 
-        let mut start_path_for_prev = None;
-        let mut expected_prev_paths = spec.leaf_paths.clone();
-        expected_prev_paths.reverse();
-        expected_prev_paths.push(spec.leaf_paths.last().unwrap().clone());
-        for expected_prev_path in expected_prev_paths {
-            let actual_prev_path = tree.prev_path(&start_path_for_prev).unwrap();
-            assert_eq!(actual_prev_path, expected_prev_path);
-            start_path_for_prev = Some(expected_prev_path);
+        let mut cases = spec.leaf_paths.clone();
+        cases.reverse();
+        cases.push(spec.leaf_paths.last().unwrap().clone());
+        let cases = cases.windows(2);
+        for case in cases {
+            let this_path = &case[0];
+            let expected = &case[1];
+            let actual = tree.prev_path(this_path).unwrap();
+            assert_eq!(actual, *expected);
         }
     }
 }

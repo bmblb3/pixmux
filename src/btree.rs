@@ -58,31 +58,25 @@ impl<L, B> BTreeNode<L, B> {
         }
     }
 
-    pub fn next_path(&self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+    pub fn next_path(&self, path: &Vec<bool>) -> Result<Vec<bool>> {
         let paths = self.collect_paths();
-        match path {
-            Some(path) => paths
-                .iter()
-                .circular_tuple_windows::<(&Vec<bool>, &Vec<bool>)>()
-                .find(|x| x.0 == path)
-                .map(|x| x.1.clone())
-                .ok_or(eyre!("")),
-            None => paths.first().cloned().ok_or(eyre!("")),
-        }
+        paths
+            .iter()
+            .circular_tuple_windows::<(&Vec<bool>, &Vec<bool>)>()
+            .find(|x| x.0 == path)
+            .map(|x| x.1.clone())
+            .ok_or(eyre!("Could not get next path!"))
     }
 
-    pub fn prev_path(&self, path: &Option<Vec<bool>>) -> Result<Vec<bool>> {
+    pub fn prev_path(&self, path: &Vec<bool>) -> Result<Vec<bool>> {
         let paths = self.collect_paths();
-        match path {
-            Some(path) => paths
-                .iter()
-                .rev()
-                .circular_tuple_windows::<(&Vec<bool>, &Vec<bool>)>()
-                .find(|x| x.0 == path)
-                .map(|x| x.1.clone())
-                .ok_or(eyre!("")),
-            None => paths.last().cloned().ok_or(eyre!("")),
-        }
+        paths
+            .iter()
+            .rev()
+            .circular_tuple_windows::<(&Vec<bool>, &Vec<bool>)>()
+            .find(|x| x.0 == path)
+            .map(|x| x.1.clone())
+            .ok_or(eyre!("Could not get next path!"))
     }
 
     pub fn remove_leaf_at(&mut self, path: &[bool]) -> Result<()>
