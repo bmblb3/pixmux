@@ -47,7 +47,7 @@ jobs:
           tar czf "../../../$ARCHIVE" "${BINS[@]}"
           cd ../../../
           sha256sum "$ARCHIVE" > "$CHECKSUM"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: release-assets
           path: |
